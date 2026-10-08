@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorare Serie A SO5 Limited - Stagione 2026/2027</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['"Cabinet Grotesk"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        sorare: {
+                            bg: '#07090e',
+                            card: '#10131d',
+                            surface: '#151926',
+                            border: '#22283a',
+                            gold: '#facc15',
+                            goldDark: '#854d0e',
+                            neonPink: '#ff007a',
+                            neonCyan: '#00f0ff',
+                            pitchGreen: '#032014'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Isometric 3D Pitch Viewport matching Sorare tactical view */
+        .pitch-viewport {
+            perspective: 1100px;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            background: radial-gradient(circle at 50% 18%, #0d3824 0%, #041c11 65%, #020c07 100%);
+            box-shadow: inset 0 0 65px rgba(0,0,0,0.85), 0 20px 45px -15px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .pitch-canvas {
+            transform: rotateX(24deg) translateY(-14px);
+            transform-origin: center top;
+            min-height: 640px;
+            position: relative;
+        }
+
+        .pitch-lines {
+            position: absolute;
+            inset: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            pointer-events: none;
+        }
+        .pitch-midline {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .pitch-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140px;
+            height: 140px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pitch-dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 9999px;
+        }
+
+        /* Sorare Card Styling */
+        .sorare-card-frame {
+            background: linear-gradient(165deg, #2a220b 0%, #141209 45%, #221804 100%);
+            border: 1.5px solid #eab308;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(234, 179, 8, 0.15);
+            transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+            user-select: none;
+        }
+        .sorare-card-frame:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 14px 28px rgba(0,0,0,0.85), 0 0 25px rgba(250, 204, 21, 0.35);
+        }
+
+        /* Captain Highlight with Neon Magenta '#ff007a' */
+        .card-captain-highlight {
+            border: 2.5px solid #ff007a !important;
+            box-shadow: 0 0 24px rgba(255, 0, 122, 0.8), 0 10px 25px rgba(0,0,0,0.9) !important;
+        }
+
+        /* Sorare Score Pills */
+        .score-pill-cyan { background: #00f0ff; color: #032127; font-weight: 900; }
+        .score-pill-emerald { background: #10b981; color: #022013; font-weight: 900; }
+        .score-pill-yellow { background: #ffd000; color: #241a00; font-weight: 900; }
+        .score-pill-red { background: #ef4444; color: #ffffff; font-weight: 900; }
+        .score-pill-gray { background: #475569; color: #ffffff; font-weight: 900; }
+
+        /* 3D Gacha Flipping */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+
+        @keyframes goldPulse {
+            0%, 100% { box-shadow: 0 0 16px #eab308; }
+            50% { box-shadow: 0 0 40px #f59e0b; }
+        }
+        .aura-star5 {
+            animation: goldPulse 1.4s infinite ease-in-out;
+            border-color: #fde047 !important;
+        }
+        .aura-star4 {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6) !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #07090e; }
+        ::-webkit-scrollbar-thumb { background: #1e2436; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #eab308; }
+    </style>
+</head>
+<body class="bg-sorare-bg text-slate-100 font-sans min-h-screen flex flex-col selection:bg-yellow-400 selection:text-black">
+
+    <!-- Main Top Navigation -->
+    <header class="sticky top-0 z-50 bg-sorare-surface/90 backdrop-blur-md border-b border-sorare-border px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-yellow-600 via-yellow-400 to-amber-200 flex items-center justify-center shadow-lg shadow-yellow-500/20 ring-2 ring-yellow-400/50">
+                    <span class="font-display font-black text-black text-xl tracking-tighter">SO5</span>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-display font-black text-base sm:text-lg tracking-wide uppercase bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-500 bg-clip-text text-transparent">SERIE A 26/27</span>
+                        <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-widest bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 rounded-full">LIMITED</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Database 305+ Giocatori &bull; Capitano x1.5 &bull; Matrice Opta Continua</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 bg-sorare-card p-1 rounded-xl border border-sorare-border">
+                <button onclick="switchTab('pitch')" id="tab-pitch" class="nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-white bg-yellow-500/20 border border-yellow-400/50">
+                    <span>🏟️</span>
+                    <span class="hidden md:inline">Campo SO5</span>
+                    <span class="md:hidden">Campo</span>
+                </button>
+                <button onclick="switchTab('fixtures')" id="tab-fixtures" class="nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                    <span>📅</span>
+                    <span class="hidden md:inline">Calendario GW</span>
+                    <span class="md:hidden">Match</span>
+                </button>
+                <button onclick="switchTab('collection')" id="tab-collection" class="nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                    <span>🗃️</span>
+                    <span>Collezione</span>
+                    <span id="nav-card-count" class="text-[10px] bg-slate-800 text-yellow-300 px-1.5 py-0.2 rounded-full font-mono">0</span>
+                </button>
+                <button onclick="switchTab('packs')" id="tab-packs" class="nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white">
+                    <span>📦</span>
+                    <span>Sbusta</span>
+                </button>
+            </nav>
+
+            <!-- Currency Indicator -->
+            <div class="flex items-center space-x-2 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-xl">
+                <span class="text-sm">🪙</span>
+                <div class="flex flex-col text-right">
+                    <span class="text-[9px] uppercase font-bold text-yellow-500 tracking-wider">Club Coins</span>
+                    <span id="player-coins" class="font-mono text-xs sm:text-sm font-bold text-yellow-300">1,500</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 space-y-6">
+
+        <!-- VIEW 1: ISOMETRIC PITCH VIEW (MATCHING USER SCREENSHOT) -->
+        <section id="view-pitch" class="view-content space-y-5">
+            <!-- Gameweek Control Top Bar -->
+            <div class="bg-sorare-surface border border-sorare-border rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 flex items-center justify-center font-display font-black text-yellow-400 text-xl">
+                        GW
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-lg font-display font-black text-white">Gameweek #<span id="gw-number">1</span> - Serie A 2026/27</h2>
+                            <span id="gw-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SCHIERAMENTO APERTO</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Disposizione identica allo screenshot: FWD &amp; EXTRA in alto; DEF, GK e MID in basso. Capitano: <b>x1.5</b></p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                    <!-- Simulation Speed Control -->
+                    <div class="flex items-center bg-sorare-card border border-sorare-border rounded-xl p-1 text-xs">
+                        <span class="text-[10px] text-slate-400 px-2 font-semibold">Velocità:</span>
+                        <button onclick="setSimSpeed('slow')" id="speed-slow" class="px-2 py-1 rounded-lg text-slate-300 hover:text-white font-mono">0.5x</button>
+                        <button onclick="setSimSpeed('normal')" id="speed-normal" class="px-2 py-1 rounded-lg bg-yellow-500/20 text-yellow-300 font-bold border border-yellow-500/40 font-mono">1x</button>
+                        <button onclick="setSimSpeed('fast')" id="speed-fast" class="px-2 py-1 rounded-lg text-slate-300 hover:text-white font-mono">2x</button>
+                    </div>
+
+                    <button onclick="autoPickLineup()" class="px-3.5 py-2 bg-sorare-card hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition flex items-center space-x-1.5">
+                        <span>⚡</span>
+                        <span>Auto-Pick</span>
+                    </button>
+
+                    <button onclick="startGameweekSimulation()" id="btn-start-sim" class="px-5 py-2 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600 hover:brightness-110 text-black font-black text-xs sm:text-sm rounded-xl transition shadow-lg shadow-yellow-500/25 flex items-center space-x-1.5">
+                        <span>▶️</span>
+                        <span>Avvia Partita Live</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ISOMETRIC PITCH SO5 ARENA -->
+            <div class="pitch-viewport">
+                <!-- Live minute badge overlay in pitch corner -->
+                <div class="absolute top-4 left-4 z-20 flex items-center space-x-2 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span id="pitch-live-clock" class="font-mono text-xs font-bold text-white">MINUTO: 00'</span>
+                    <span class="text-slate-500">&bull;</span>
+                    <span class="text-xs text-slate-300">Punti SO5: <b id="pitch-total-score" class="font-mono text-yellow-400">0.0</b></span>
+                </div>
+
+                <div class="pitch-canvas p-4 sm:p-8 flex flex-col justify-between">
+                    <!-- Field Markings -->
+                    <div class="pitch-lines">
+                        <div class="pitch-midline"></div>
+                        <div class="pitch-circle">
+                            <div class="pitch-dot"></div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 1 (TOP OFFENSIVE DUO): FWD & EXTRA (from screenshot) -->
+                    <div class="relative z-10 flex justify-center items-center gap-6 sm:gap-14 pt-4 pb-2">
+                        <!-- FWD Slot (Top Left) -->
+                        <div class="flex flex-col items-center slot-wrapper" data-slot="FWD">
+                            <div id="field-card-FWD" onclick="openCardPicker('FWD')" class="cursor-pointer"></div>
+                            <div id="field-score-FWD" class="mt-1.5 flex flex-col items-center"></div>
+                        </div>
+
+                        <!-- EXTRA Slot (Top Right - with neon magenta border option from screenshot) -->
+                        <div class="flex flex-col items-center slot-wrapper" data-slot="EXTRA">
+                            <div id="field-card-EXTRA" onclick="openCardPicker('EXTRA')" class="cursor-pointer"></div>
+                            <div id="field-score-EXTRA" class="mt-1.5 flex flex-col items-center"></div>
+                        </div>
+                    </div>
+
+                    <!-- ROW 2 (BOTTOM TRIO): DEF (Left), GK (Center bottom), MID (Right) -->
+                    <div class="relative z-10 flex justify-center items-end gap-4 sm:gap-8 pt-4 pb-6">
+                        <!-- DEF Slot (Bottom Left) -->
+                        <div class="flex flex-col items-center slot-wrapper" data-slot="DEF">
+                            <div id="field-card-DEF" onclick="openCardPicker('DEF')" class="cursor-pointer"></div>
+                            <div id="field-score-DEF" class="mt-1.5 flex flex-col items-center"></div>
+                        </div>
+
+                        <!-- GK Slot (Center Lowest) -->
+                        <div class="flex flex-col items-center slot-wrapper translate-y-3" data-slot="GK">
+                            <div id="field-card-GK" onclick="openCardPicker('GK')" class="cursor-pointer"></div>
+                            <div id="field-score-GK" class="mt-1.5 flex flex-col items-center"></div>
+                        </div>
+
+                        <!-- MID Slot (Bottom Right) -->
+                        <div class="flex flex-col items-center slot-wrapper" data-slot="MID">
+                            <div id="field-card-MID" onclick="openCardPicker('MID')" class="cursor-pointer"></div>
+                            <div id="field-score-MID" class="mt-1.5 flex flex-col items-center"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Match Ticker & Scoring Console -->
+            <div id="live-console" class="bg-sorare-surface border border-sorare-border rounded-2xl p-4 shadow-xl space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-sorare-border text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-display font-black text-white tracking-wider uppercase">Cronaca Live &amp; Matrice Sorare Opta</span>
+                    </div>
+                    <div class="text-slate-400 font-mono text-[11px]" id="sim-progress-indicator">Match non iniziato</div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs">
+                    <div id="ticker-feed" class="lg:col-span-2 bg-sorare-bg rounded-xl p-3 border border-slate-800/80 h-44 overflow-y-auto font-mono text-[11px] space-y-1.5 flex flex-col-reverse">
+                        <div class="text-slate-500 italic">Schiera la tua squadra e clicca "Avvia Partita Live" per seguire le 10 gare di Serie A minuto per minuto.</div>
+                    </div>
+
+                    <div class="bg-sorare-bg rounded-xl p-3 border border-slate-800/80 flex flex-col justify-between">
+                        <div class="space-y-1.5">
+                            <span class="font-bold text-yellow-400 text-[11px] uppercase tracking-wider">Matrice Ufficiale Sorare</span>
+                            <p class="text-[10px] text-slate-300 leading-relaxed">
+                                &bull; <b class="text-emerald-400">GK Clean Sheet (60'+)</b>: Azione Decisiva (+1 DS -> 60 base).<br>
+                                &bull; <b class="text-cyan-400">DEF Clean Sheet (60'+)</b>: Bonus All-Around +10 pt AAS (non DS).<br>
+                                &bull; <b class="text-amber-400">Attaccanti AAS Continuo</b>: Tiri porta (+3), Dribbling (+2), Occasioni (+3).<br>
+                                &bull; <b class="text-rose-400">DNP</b>: Solo per seconde linee con % basse.
+                            </p>
+                        </div>
+                        <div class="text-[10px] text-pink-400 font-bold pt-2 border-t border-slate-800">
+                            Capitano (C): Moltiplicatore esatto x1.5 (+50% punti totali).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post-match continue banner -->
+                <div id="gw-completion-banner" class="hidden mt-3 p-4 bg-gradient-to-r from-yellow-500/15 via-sorare-card to-amber-500/20 border-2 border-yellow-400/60 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3 text-left">
+                        <span class="text-3xl">🏅</span>
+                        <div>
+                            <div class="font-display font-black text-sm text-white" id="completion-title">Gameweek Conclusa!</div>
+                            <div class="text-xs text-slate-300" id="completion-desc">Punteggio registrato. Scopri i tuoi premi in Club Coins e Carte Misteriose!</div>
+                        </div>
+                    </div>
+                    <button onclick="advanceToNextGameweek()" class="w-full sm:w-auto px-6 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                        <span>CONTINUA ALLA PROSSIMA GW</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: FIXTURES CALENDAR & MATCHUP TACTICS -->
+        <section id="view-fixtures" class="view-content hidden space-y-5">
+            <div class="bg-sorare-surface p-4 rounded-2xl border border-sorare-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-display font-black text-white">Calendario Ufficiale Serie A 2026/27 - GW #<span id="fixtures-gw-label">1</span></h2>
+                    <p class="text-xs text-slate-400">Quote vittoria, partite in Casa (C) o Fuori (F) e probabilità di titolarità dei tuoi calciatori.</p>
+                </div>
+                <div class="flex items-center space-x-3 text-xs">
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span class="text-slate-300">Favorevole (&gt;55%)</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span class="text-slate-300">Equilibrato</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span><span class="text-slate-300">Rischioso / Big Match</span></span>
+                </div>
+            </div>
+
+            <div id="fixtures-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+        </section>
+
+        <!-- VIEW 3: CARD COLLECTION & DUPLICATE MANAGEMENT -->
+        <section id="view-collection" class="view-content hidden space-y-5">
+            <div class="bg-sorare-surface p-4 rounded-2xl border border-sorare-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-display font-black text-white">La Mia Collezione Serie A</h2>
+                    <p class="text-xs text-slate-400">Tutte le carte Limited possedute. I doppioni vengono convertiti automaticamente in Club Coins.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="recycleAllDuplicates()" id="btn-quick-recycle" class="px-3 py-1.5 bg-yellow-500/15 hover:bg-yellow-500/25 border border-yellow-400/50 text-yellow-300 font-bold text-xs rounded-lg transition flex items-center space-x-1.5">
+                        <span>♻️</span>
+                        <span>Vendi Tutti i Doppioni</span>
+                    </button>
+
+                    <div class="flex items-center gap-1 bg-sorare-card p-1 rounded-lg border border-sorare-border text-xs" id="collection-filters">
+                        <button onclick="filterCollection('ALL')" class="col-filter-btn px-2.5 py-1 rounded bg-yellow-500 text-black font-bold">Tutti</button>
+                        <button onclick="filterCollection('GK')" class="col-filter-btn px-2.5 py-1 rounded text-slate-300 hover:text-white">GK</button>
+                        <button onclick="filterCollection('DEF')" class="col-filter-btn px-2.5 py-1 rounded text-slate-300 hover:text-white">DEF</button>
+                        <button onclick="filterCollection('MID')" class="col-filter-btn px-2.5 py-1 rounded text-slate-300 hover:text-white">MID</button>
+                        <button onclick="filterCollection('FWD')" class="col-filter-btn px-2.5 py-1 rounded text-slate-300 hover:text-white">FWD</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="collection-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
+        </section>
+
+        <!-- VIEW 4: PACK SHOP & GACHA PULLS -->
+        <section id="view-packs" class="view-content hidden space-y-6">
+            <div class="text-center max-w-xl mx-auto space-y-1.5">
+                <span class="px-3 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-yellow-400/20 text-yellow-300 border border-yellow-400/40">Limited Store</span>
+                <h2 class="text-2xl sm:text-3xl font-display font-black text-white">Pacchetti Limited Serie A</h2>
+                <p class="text-xs text-slate-400">Probabilità fedeli: le carte 1★, 2★ e 3★ sono frequenti; le 4★ e 5★ sono rare. I doppioni (anche all'interno dello stesso pack) vengono convertiti all'istante in monete!</p>
+            </div>
+
+            <!-- Gacha Odds & Duplicate Values Table -->
+            <div class="max-w-3xl mx-auto bg-sorare-surface border border-sorare-border rounded-xl p-3.5 grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+                <div class="p-2 bg-slate-900/60 rounded-lg"><span class="text-slate-400 font-bold block">1★ (35%)</span><span class="text-yellow-400 text-[11px] font-mono">+80 Coins</span></div>
+                <div class="p-2 bg-slate-900/60 rounded-lg"><span class="text-slate-400 font-bold block">2★ (30%)</span><span class="text-yellow-400 text-[11px] font-mono">+160 Coins</span></div>
+                <div class="p-2 bg-slate-900/60 rounded-lg"><span class="text-slate-400 font-bold block">3★ (20%)</span><span class="text-yellow-400 text-[11px] font-mono">+350 Coins</span></div>
+                <div class="p-2 bg-slate-900/60 rounded-lg"><span class="text-amber-300 font-bold block">4★ (11%)</span><span class="text-yellow-400 text-[11px] font-mono">+800 Coins</span></div>
+                <div class="p-2 bg-slate-900/60 rounded-lg col-span-2 sm:col-span-1"><span class="text-yellow-300 font-extrabold block">5★ (4%)</span><span class="text-yellow-300 text-[11px] font-mono">+2000 Coins</span></div>
+            </div>
+
+            <!-- Pack Cards Options -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                <!-- Standard Pack -->
+                <div class="bg-sorare-surface border border-sorare-border hover:border-yellow-500/50 rounded-2xl p-5 flex flex-col items-center text-center transition">
+                    <div class="w-28 h-36 bg-gradient-to-tr from-amber-700 via-yellow-600 to-yellow-400 rounded-xl flex flex-col items-center justify-center shadow-lg shadow-yellow-500/20 mb-3 cursor-pointer transform hover:scale-105 transition" onclick="openPack('standard')">
+                        <span class="text-4xl">📦</span>
+                        <span class="font-display font-black text-black text-xs mt-1 uppercase">Pack 5 Carte</span>
+                    </div>
+                    <h3 class="font-display font-bold text-base text-white">Pacchetto Standard</h3>
+                    <p class="text-xs text-slate-400 my-2">5 carte Limited Serie A. Doppioni rimborsati istantaneamente.</p>
+                    <button onclick="openPack('standard')" class="mt-auto w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold text-xs rounded-xl transition">
+                        🪙 500 Club Coins
+                    </button>
+                </div>
+
+                <!-- Premium Pack -->
+                <div class="bg-sorare-surface border-2 border-yellow-500/60 rounded-2xl p-5 flex flex-col items-center text-center relative transition">
+                    <span class="absolute -top-2.5 px-2.5 py-0.5 bg-yellow-400 text-black text-[9px] font-black rounded-full uppercase">1x 3★+ GARANTITA</span>
+                    <div class="w-28 h-36 bg-gradient-to-tr from-yellow-600 via-amber-400 to-yellow-200 rounded-xl flex flex-col items-center justify-center shadow-2xl shadow-yellow-500/40 mb-3 cursor-pointer transform hover:scale-105 transition" onclick="openPack('premium')">
+                        <span class="text-4xl">⚡</span>
+                        <span class="font-display font-black text-black text-xs mt-1 uppercase">Top Pack</span>
+                    </div>
+                    <h3 class="font-display font-bold text-base text-white">Pacchetto Premium</h3>
+                    <p class="text-xs text-slate-400 my-2">5 carte con 1 giocatore 3★, 4★ o 5★ garantito.</p>
+                    <button onclick="openPack('premium')" class="mt-auto w-full py-2 bg-gradient-to-r from-yellow-400 to-amber-300 hover:brightness-110 text-black font-extrabold text-xs rounded-xl transition">
+                        🪙 1,200 Club Coins
+                    </button>
+                </div>
+
+                <!-- Fuoriclasse Pack -->
+                <div class="bg-sorare-surface border-2 border-pink-500/60 rounded-2xl p-5 flex flex-col items-center text-center relative transition">
+                    <span class="absolute -top-2.5 px-2.5 py-0.5 bg-sorare-neonPink text-white text-[9px] font-black rounded-full uppercase">1x 4★/5★ TOP GARANTITA</span>
+                    <div class="w-28 h-36 bg-gradient-to-tr from-pink-600 via-purple-600 to-amber-400 rounded-xl flex flex-col items-center justify-center shadow-2xl shadow-pink-500/40 mb-3 cursor-pointer transform hover:scale-105 transition" onclick="openPack('fuoriclasse')">
+                        <span class="text-4xl">👑</span>
+                        <span class="font-display font-black text-white text-xs mt-1 uppercase">Fuoriclasse</span>
+                    </div>
+                    <h3 class="font-display font-bold text-base text-white">Pacchetto Fuoriclasse</h3>
+                    <p class="text-xs text-slate-400 my-2">3 carte Limited con almeno 1 Fuoriclasse 4★ o 5★ garantito.</p>
+                    <button onclick="openPack('fuoriclasse')" class="mt-auto w-full py-2 bg-gradient-to-r from-pink-500 to-amber-400 hover:brightness-110 text-black font-extrabold text-xs rounded-xl transition">
+                        🪙 3,000 Club Coins
+                    </button>
+                </div>
+            </div>
+
+            <!-- Free Sponsor Coins Button -->
+            <div class="max-w-md mx-auto pt-4 text-center">
+                <button onclick="claimFreeCoins()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 font-bold text-xs border border-yellow-500/40 rounded-xl transition flex items-center justify-center space-x-2 mx-auto">
+                    <span>🏦</span>
+                    <span>Sponsor Lega Serie A: Ricevi +600 Coins Gratuiti</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 3D PACK OPENING MODAL -->
+    <div id="pack-opening-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl hidden flex flex-col items-center justify-center p-4">
+        <button id="pack-close-btn" onclick="closePackOpeningModal()" class="hidden absolute top-5 right-5 px-5 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs rounded-xl shadow-lg transition">
+            Completa e Chiudi
+        </button>
+
+        <div class="flex flex-col items-center text-center max-w-5xl w-full">
+            <h2 id="pack-modal-title" class="font-display font-black text-2xl text-yellow-400 mb-1 animate-pulse">TOCCA IL PACCHETTO PER STRAPPARLO!</h2>
+            <p id="pack-modal-desc" class="text-xs text-slate-400 mb-6">Carte Limited Serie A &bull; I doppioni (anche all'interno dello stesso pacchetto) vengono convertiti subito in Coins!</p>
+
+            <!-- 3D Foil Pack -->
+            <div id="interactive-pack" onclick="ripPack()" class="cursor-pointer group relative w-56 h-80 bg-gradient-to-tr from-yellow-700 via-amber-400 to-yellow-200 rounded-2xl p-4 shadow-[0_0_50px_rgba(234,179,8,0.45)] border-4 border-yellow-300 flex flex-col justify-between items-center transition-transform hover:scale-105 active:scale-95">
+                <div class="w-full flex justify-between items-center text-[9px] font-black text-yellow-950 uppercase tracking-widest border-b border-yellow-900/30 pb-1.5">
+                    <span id="pack-foil-label-1">SERIE A LIMITED</span>
+                    <span>SORARE SET</span>
+                </div>
+                <div class="text-center">
+                    <span class="text-5xl block group-hover:rotate-12 transition">⚡</span>
+                    <span id="pack-foil-title" class="font-display font-black text-xl text-black block tracking-tight mt-2">PACCHETTO SO5</span>
+                    <span class="text-[10px] font-bold text-yellow-900">AUTO-CAMBIO DOPPIONI</span>
+                </div>
+                <div class="w-full text-center py-2 bg-black/90 rounded-lg text-yellow-300 font-extrabold text-[11px] uppercase tracking-wider">
+                    Clicca per Aprire
+                </div>
+            </div>
+
+            <!-- Revealed Cards Container -->
+            <div id="pack-cards-container" class="hidden flex flex-wrap items-center justify-center gap-3.5 max-w-6xl py-2 perspective-1000"></div>
+        </div>
+    </div>
+
+    <!-- MYSTERY CARD REWARD MODAL (FOR TIER WINNERS) -->
+    <div id="mystery-reward-modal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-sorare-surface border-2 border-yellow-400 max-w-sm w-full rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+            <span class="text-4xl block">🎁</span>
+            <h3 class="font-display font-black text-xl text-white">Premio Podio GW!</h3>
+            <p class="text-xs text-slate-300" id="mystery-reward-subtitle">Hai sbloccato una carta Limited esclusiva!</p>
+            <div id="mystery-card-container" class="flex justify-center py-2"></div>
+            <button onclick="closeMysteryModal()" class="w-full py-2.5 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs rounded-xl shadow-lg transition">
+                Aggiungi alla Collezione
+            </button>
+        </div>
+    </div>
+
+    <!-- PLAYER SELECTOR MODAL -->
+    <div id="slot-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-sorare-surface border border-sorare-border max-w-2xl w-full rounded-2xl p-5 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between pb-3 border-b border-sorare-border">
+                <div>
+                    <h3 class="font-display font-black text-lg text-white">Schiera Giocatore: <span id="modal-slot-title" class="text-yellow-400 font-mono">GK</span></h3>
+                    <p class="text-xs text-slate-400">Verifica la probabilità di titolarità (% Titolare), le stelle SET e l'avversario.</p>
+                </div>
+                <button onclick="closeCardPicker()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs font-bold">&times;</button>
+            </div>
+
+            <div id="modal-card-list" class="overflow-y-auto py-3 space-y-2 flex-1 pr-1"></div>
+
+            <div class="pt-3 border-t border-sorare-border flex justify-between items-center text-xs text-slate-400">
+                <span>Attenzione: i giocatori che non scendono in campo ottengono DNP (0 punti)!</span>
+                <button onclick="clearCurrentSlot()" class="text-rose-400 hover:underline">Rimuovi da questo slot</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio Synthesizer for native effects
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            playClick() {
+                try {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.04);
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.04);
+                } catch(e) {}
+            },
+            playCoins() {
+                try {
+                    this.init();
+                    [987.77, 1318.51].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.07);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime + i * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.07 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + i * 0.07);
+                        osc.stop(this.ctx.currentTime + i * 0.07 + 0.25);
+                    });
+                } catch(e) {}
+            },
+            playFanfare(isLegendary = false) {
+                try {
+                    this.init();
+                    const freqs = isLegendary ? [523.25, 659.25, 783.99, 1046.50] : [523.25, 659.25, 783.99];
+                    freqs.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = isLegendary ? 'sawtooth' : 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.35);
+                    });
+                } catch(e) {}
+            },
+            playWhistle() {
+                try {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(2300, this.ctx.currentTime);
+                    osc.frequency.setValueAtTime(2700, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.35);
+                } catch(e) {}
+            }
+        };
+
+        // All 20 Serie A clubs for 2026/2027 season with relative tier strength
+        const SERIE_A_TEAMS = {
+            'Inter': { code: 'INT', tier: 1 },
+            'Juventus': { code: 'JUV', tier: 1 },
+            'Milan': { code: 'MIL', tier: 2 },
+            'Napoli': { code: 'NAP', tier: 2 },
+            'Atalanta': { code: 'ATA', tier: 2 },
+            'Roma': { code: 'ROM', tier: 3 },
+            'Lazio': { code: 'LAZ', tier: 3 },
+            'Fiorentina': { code: 'FIO', tier: 3 },
+            'Bologna': { code: 'BOL', tier: 3 },
+            'Como': { code: 'COM', tier: 3 },
+            'Torino': { code: 'TOR', tier: 4 },
+            'Genoa': { code: 'GEN', tier: 4 },
+            'Parma': { code: 'PAR', tier: 4 },
+            'Udinese': { code: 'UDI', tier: 4 },
+            'Sassuolo': { code: 'SAS', tier: 4 },
+            'Cagliari': { code: 'CAG', tier: 5 },
+            'Verona': { code: 'VER', tier: 5 },
+            'Monza': { code: 'MON', tier: 5 },
+            'Lecce': { code: 'LEC', tier: 5 },
+            'Venezia': { code: 'VEN', tier: 5 }
+        };
+
+        const DUPLICATE_COIN_VALUES = {
+            1: 80,
+            2: 160,
+            3: 350,
+            4: 800,
+            5: 2000
+        };
+
+        // Massive Database of 305+ Serie A 2026/2027 Players
+        const SERIE_A_PLAYERS = [
+            // INTER (18)
+            { id: 'int_sommer', name: 'Yann Sommer', team: 'Inter', role: 'GK', stars: 5, avatar: '🇨🇭', startChance: 96, baseAAS: 12, varAAS: 6 },
+            { id: 'int_martinez_j', name: 'Josep Martínez', team: 'Inter', role: 'GK', stars: 3, avatar: '🇪🇸', startChance: 12, baseAAS: 10, varAAS: 5 },
+            { id: 'int_bastoni', name: 'Alessandro Bastoni', team: 'Inter', role: 'DEF', stars: 5, avatar: '🇮🇹', startChance: 94, baseAAS: 18, varAAS: 8 },
+            { id: 'int_dimarco', name: 'Federico Dimarco', team: 'Inter', role: 'DEF', stars: 5, avatar: '🇮🇹', startChance: 92, baseAAS: 20, varAAS: 9 },
+            { id: 'int_pavard', name: 'Benjamin Pavard', team: 'Inter', role: 'DEF', stars: 4, avatar: '🇫🇷', startChance: 86, baseAAS: 16, varAAS: 7 },
+            { id: 'int_acerbi', name: 'Francesco Acerbi', team: 'Inter', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 65, baseAAS: 14, varAAS: 6 },
+            { id: 'int_de_vrij', name: 'Stefan de Vrij', team: 'Inter', role: 'DEF', stars: 3, avatar: '🇳🇱', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'int_bisseck', name: 'Yann Bisseck', team: 'Inter', role: 'DEF', stars: 3, avatar: '🇩🇪', startChance: 60, baseAAS: 14, varAAS: 7 },
+            { id: 'int_dumfries', name: 'Denzel Dumfries', team: 'Inter', role: 'DEF', stars: 4, avatar: '🇳🇱', startChance: 82, baseAAS: 16, varAAS: 8 },
+            { id: 'int_carlos_augusto', name: 'Carlos Augusto', team: 'Inter', role: 'DEF', stars: 3, avatar: '🇧🇷', startChance: 50, baseAAS: 13, varAAS: 6 },
+            { id: 'int_barella', name: 'Nicolò Barella', team: 'Inter', role: 'MID', stars: 5, avatar: '🇮🇹', startChance: 95, baseAAS: 22, varAAS: 9 },
+            { id: 'int_calhanoglu', name: 'Hakan Çalhanoğlu', team: 'Inter', role: 'MID', stars: 5, avatar: '🇹🇷', startChance: 93, baseAAS: 21, varAAS: 9 },
+            { id: 'int_mkhitaryan', name: 'Henrikh Mkhitaryan', team: 'Inter', role: 'MID', stars: 4, avatar: '🇦🇲', startChance: 75, baseAAS: 16, varAAS: 7 },
+            { id: 'int_zielinski', name: 'Piotr Zieliński', team: 'Inter', role: 'MID', stars: 4, avatar: '🇵🇱', startChance: 70, baseAAS: 17, varAAS: 8 },
+            { id: 'int_asllani', name: 'Kristjan Asllani', team: 'Inter', role: 'MID', stars: 2, avatar: '🇦🇱', startChance: 30, baseAAS: 11, varAAS: 5 },
+            { id: 'int_frattesi', name: 'Davide Frattesi', team: 'Inter', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 65, baseAAS: 18, varAAS: 8 },
+            { id: 'int_lautaro', name: 'Lautaro Martínez', team: 'Inter', role: 'FWD', stars: 5, avatar: '🇦🇷', startChance: 96, baseAAS: 22, varAAS: 10 },
+            { id: 'int_thuram', name: 'Marcus Thuram', team: 'Inter', role: 'FWD', stars: 5, avatar: '🇫🇷', startChance: 92, baseAAS: 20, varAAS: 9 },
+            { id: 'int_taremi', name: 'Mehdi Taremi', team: 'Inter', role: 'FWD', stars: 3, avatar: '🇮🇷', startChance: 40, baseAAS: 14, varAAS: 7 },
+
+            // JUVENTUS (17)
+            { id: 'juv_digregorio', name: 'Michele Di Gregorio', team: 'Juventus', role: 'GK', stars: 4, avatar: '🇮🇹', startChance: 94, baseAAS: 13, varAAS: 6 },
+            { id: 'juv_perin', name: 'Mattia Perin', team: 'Juventus', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 10, baseAAS: 10, varAAS: 5 },
+            { id: 'juv_bremer', name: 'Gleison Bremer', team: 'Juventus', role: 'DEF', stars: 5, avatar: '🇧🇷', startChance: 96, baseAAS: 19, varAAS: 8 },
+            { id: 'juv_gatti', name: 'Federico Gatti', team: 'Juventus', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 86, baseAAS: 15, varAAS: 7 },
+            { id: 'juv_kalulu', name: 'Pierre Kalulu', team: 'Juventus', role: 'DEF', stars: 3, avatar: '🇫🇷', startChance: 78, baseAAS: 14, varAAS: 6 },
+            { id: 'juv_cambiaso', name: 'Andrea Cambiaso', team: 'Juventus', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 90, baseAAS: 17, varAAS: 8 },
+            { id: 'juv_caball', name: 'Juan Cabal', team: 'Juventus', role: 'DEF', stars: 2, avatar: '🇨🇴', startChance: 45, baseAAS: 11, varAAS: 5 },
+            { id: 'juv_danilo', name: 'Danilo', team: 'Juventus', role: 'DEF', stars: 3, avatar: '🇧🇷', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'juv_locatelli', name: 'Manuel Locatelli', team: 'Juventus', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 90, baseAAS: 17, varAAS: 7 },
+            { id: 'juv_koopmeiners', name: 'Teun Koopmeiners', team: 'Juventus', role: 'MID', stars: 5, avatar: '🇳🇱', startChance: 93, baseAAS: 21, varAAS: 9 },
+            { id: 'juv_thuram_k', name: 'Khéphren Thuram', team: 'Juventus', role: 'MID', stars: 4, avatar: '🇫🇷', startChance: 82, baseAAS: 16, varAAS: 7 },
+            { id: 'juv_douglas_luiz', name: 'Douglas Luiz', team: 'Juventus', role: 'MID', stars: 3, avatar: '🇧🇷', startChance: 60, baseAAS: 14, varAAS: 7 },
+            { id: 'juv_fagioli', name: 'Nicolò Fagioli', team: 'Juventus', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'juv_mckennie', name: 'Weston McKennie', team: 'Juventus', role: 'MID', stars: 3, avatar: '🇺🇸', startChance: 65, baseAAS: 14, varAAS: 6 },
+            { id: 'juv_conceicao', name: 'Francisco Conceição', team: 'Juventus', role: 'FWD', stars: 4, avatar: '🇵🇹', startChance: 80, baseAAS: 18, varAAS: 8 },
+            { id: 'juv_yildiz', name: 'Kenan Yıldız', team: 'Juventus', role: 'FWD', stars: 4, avatar: '🇹🇷', startChance: 88, baseAAS: 18, varAAS: 9 },
+            { id: 'juv_vlahovic', name: 'Dušan Vlahović', team: 'Juventus', role: 'FWD', stars: 5, avatar: '🇷🇸', startChance: 95, baseAAS: 21, varAAS: 10 },
+
+            // MILAN (17)
+            { id: 'mil_maignan', name: 'Mike Maignan', team: 'Milan', role: 'GK', stars: 5, avatar: '🇫🇷', startChance: 95, baseAAS: 13, varAAS: 6 },
+            { id: 'mil_torriani', name: 'Lorenzo Torriani', team: 'Milan', role: 'GK', stars: 1, avatar: '🇮🇹', startChance: 8, baseAAS: 9, varAAS: 4 },
+            { id: 'mil_theo', name: 'Theo Hernández', team: 'Milan', role: 'DEF', stars: 5, avatar: '🇫🇷', startChance: 94, baseAAS: 20, varAAS: 9 },
+            { id: 'mil_tomori', name: 'Fikayo Tomori', team: 'Milan', role: 'DEF', stars: 4, avatar: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', startChance: 84, baseAAS: 15, varAAS: 7 },
+            { id: 'mil_pavlovic', name: 'Strahinja Pavlović', team: 'Milan', role: 'DEF', stars: 3, avatar: '🇷🇸', startChance: 78, baseAAS: 14, varAAS: 7 },
+            { id: 'mil_gabbia', name: 'Matteo Gabbia', team: 'Milan', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 70, baseAAS: 14, varAAS: 6 },
+            { id: 'mil_emerson', name: 'Emerson Royal', team: 'Milan', role: 'DEF', stars: 3, avatar: '🇧🇷', startChance: 75, baseAAS: 13, varAAS: 6 },
+            { id: 'mil_reijnders', name: 'Tijjani Reijnders', team: 'Milan', role: 'MID', stars: 5, avatar: '🇳🇱', startChance: 94, baseAAS: 21, varAAS: 8 },
+            { id: 'mil_fofana', name: 'Youssouf Fofana', team: 'Milan', role: 'MID', stars: 4, avatar: '🇫🇷', startChance: 90, baseAAS: 17, varAAS: 7 },
+            { id: 'mil_loftus', name: 'Ruben Loftus-Cheek', team: 'Milan', role: 'MID', stars: 3, avatar: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', startChance: 65, baseAAS: 14, varAAS: 7 },
+            { id: 'mil_musah', name: 'Yunus Musah', team: 'Milan', role: 'MID', stars: 2, avatar: '🇺🇸', startChance: 45, baseAAS: 12, varAAS: 5 },
+            { id: 'mil_bennacer', name: 'Ismaël Bennacer', team: 'Milan', role: 'MID', stars: 3, avatar: '🇩🇿', startChance: 50, baseAAS: 14, varAAS: 6 },
+            { id: 'mil_pulisic', name: 'Christian Pulisic', team: 'Milan', role: 'MID', stars: 5, avatar: '🇺🇸', startChance: 92, baseAAS: 21, varAAS: 9 },
+            { id: 'mil_leao', name: 'Rafael Leão', team: 'Milan', role: 'FWD', stars: 5, avatar: '🇵🇹', startChance: 93, baseAAS: 22, varAAS: 10 },
+            { id: 'mil_morata', name: 'Álvaro Morata', team: 'Milan', role: 'FWD', stars: 4, avatar: '🇪🇸', startChance: 85, baseAAS: 18, varAAS: 8 },
+            { id: 'mil_abraham', name: 'Tammy Abraham', team: 'Milan', role: 'FWD', stars: 3, avatar: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', startChance: 45, baseAAS: 14, varAAS: 7 },
+            { id: 'mil_camarda', name: 'Francesco Camarda', team: 'Milan', role: 'FWD', stars: 1, avatar: '🇮🇹', startChance: 18, baseAAS: 10, varAAS: 6 },
+
+            // NAPOLI (16)
+            { id: 'nap_meret', name: 'Alex Meret', team: 'Napoli', role: 'GK', stars: 4, avatar: '🇮🇹', startChance: 92, baseAAS: 12, varAAS: 5 },
+            { id: 'nap_caprile', name: 'Elia Caprile', team: 'Napoli', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 12, baseAAS: 10, varAAS: 5 },
+            { id: 'nap_buongiorno', name: 'Alessandro Buongiorno', team: 'Napoli', role: 'DEF', stars: 5, avatar: '🇮🇹', startChance: 95, baseAAS: 19, varAAS: 8 },
+            { id: 'nap_rrahmani', name: 'Amir Rrahmani', team: 'Napoli', role: 'DEF', stars: 4, avatar: '🇽🇰', startChance: 88, baseAAS: 15, varAAS: 6 },
+            { id: 'nap_di_lorenzo', name: 'Giovanni Di Lorenzo', team: 'Napoli', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 94, baseAAS: 17, varAAS: 7 },
+            { id: 'nap_olivera', name: 'Mathías Olivera', team: 'Napoli', role: 'DEF', stars: 3, avatar: '🇺🇾', startChance: 75, baseAAS: 14, varAAS: 6 },
+            { id: 'nap_spinazzola', name: 'Leonardo Spinazzola', team: 'Napoli', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'nap_mctominay', name: 'Scott McTominay', team: 'Napoli', role: 'MID', stars: 5, avatar: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', startChance: 92, baseAAS: 20, varAAS: 8 },
+            { id: 'nap_anguissa', name: 'André-Frank Zambo Anguissa', team: 'Napoli', role: 'MID', stars: 4, avatar: '🇨🇲', startChance: 90, baseAAS: 17, varAAS: 7 },
+            { id: 'nap_lobotka', name: 'Stanislav Lobotka', team: 'Napoli', role: 'MID', stars: 4, avatar: '🇸🇰', startChance: 92, baseAAS: 17, varAAS: 6 },
+            { id: 'nap_gilmour', name: 'Billy Gilmour', team: 'Napoli', role: 'MID', stars: 3, avatar: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', startChance: 40, baseAAS: 13, varAAS: 6 },
+            { id: 'nap_folorunsho', name: 'Michael Folorunsho', team: 'Napoli', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 35, baseAAS: 11, varAAS: 5 },
+            { id: 'nap_kvara', name: 'Khvicha Kvaratskhelia', team: 'Napoli', role: 'FWD', stars: 5, avatar: '🇬🇪', startChance: 94, baseAAS: 22, varAAS: 9 },
+            { id: 'nap_lukaku', name: 'Romelu Lukaku', team: 'Napoli', role: 'FWD', stars: 5, avatar: '🇧🇪', startChance: 91, baseAAS: 20, varAAS: 9 },
+            { id: 'nap_politano', name: 'Matteo Politano', team: 'Napoli', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 84, baseAAS: 17, varAAS: 7 },
+            { id: 'nap_neres', name: 'David Neres', team: 'Napoli', role: 'FWD', stars: 4, avatar: '🇧🇷', startChance: 65, baseAAS: 18, varAAS: 8 },
+
+            // ATALANTA (16)
+            { id: 'ata_carnesecchi', name: 'Marco Carnesecchi', team: 'Atalanta', role: 'GK', stars: 4, avatar: '🇮🇹', startChance: 93, baseAAS: 13, varAAS: 6 },
+            { id: 'ata_patricio', name: 'Rui Patrício', team: 'Atalanta', role: 'GK', stars: 2, avatar: '🇵🇹', startChance: 10, baseAAS: 10, varAAS: 5 },
+            { id: 'ata_hien', name: 'Isak Hien', team: 'Atalanta', role: 'DEF', stars: 4, avatar: '🇸🇪', startChance: 90, baseAAS: 16, varAAS: 7 },
+            { id: 'ata_kolasinac', name: 'Sead Kolašinac', team: 'Atalanta', role: 'DEF', stars: 4, avatar: '🇧🇦', startChance: 85, baseAAS: 15, varAAS: 6 },
+            { id: 'ata_djimisti', name: 'Berat Djimsiti', team: 'Atalanta', role: 'DEF', stars: 3, avatar: '🇦🇱', startChance: 82, baseAAS: 14, varAAS: 6 },
+            { id: 'ata_bellanova', name: 'Raoul Bellanova', team: 'Atalanta', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 88, baseAAS: 17, varAAS: 7 },
+            { id: 'ata_ruggeri', name: 'Matteo Ruggeri', team: 'Atalanta', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 78, baseAAS: 14, varAAS: 6 },
+            { id: 'ata_ederson', name: 'Éderson', team: 'Atalanta', role: 'MID', stars: 5, avatar: '🇧🇷', startChance: 93, baseAAS: 20, varAAS: 8 },
+            { id: 'ata_de_ketelaere', name: 'Charles De Ketelaere', team: 'Atalanta', role: 'MID', stars: 4, avatar: '🇧🇪', startChance: 88, baseAAS: 19, varAAS: 8 },
+            { id: 'ata_pasalic', name: 'Mario Pašalić', team: 'Atalanta', role: 'MID', stars: 3, avatar: '🇭🇷', startChance: 70, baseAAS: 15, varAAS: 7 },
+            { id: 'ata_samardzic', name: 'Lazar Samardžić', team: 'Atalanta', role: 'MID', stars: 4, avatar: '🇷🇸', startChance: 70, baseAAS: 17, varAAS: 8 },
+            { id: 'ata_brescianini', name: 'Marco Brescianini', team: 'Atalanta', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'ata_lookman', name: 'Ademola Lookman', team: 'Atalanta', role: 'FWD', stars: 5, avatar: '🇳🇬', startChance: 91, baseAAS: 22, varAAS: 10 },
+            { id: 'ata_retegui', name: 'Mateo Retegui', team: 'Atalanta', role: 'FWD', stars: 5, avatar: '🇮🇹', startChance: 92, baseAAS: 21, varAAS: 9 },
+            { id: 'ata_zaniolo', name: 'Nicolò Zaniolo', team: 'Atalanta', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 50, baseAAS: 14, varAAS: 7 },
+            { id: 'ata_cuadrado', name: 'Juan Cuadrado', team: 'Atalanta', role: 'MID', stars: 2, avatar: '🇨🇴', startChance: 35, baseAAS: 12, varAAS: 5 },
+
+            // ROMA (16)
+            { id: 'rom_svilar', name: 'Mile Svilar', team: 'Roma', role: 'GK', stars: 4, avatar: '🇷🇸', startChance: 95, baseAAS: 13, varAAS: 6 },
+            { id: 'rom_ryan', name: 'Mathew Ryan', team: 'Roma', role: 'GK', stars: 2, avatar: '🇦🇺', startChance: 8, baseAAS: 9, varAAS: 4 },
+            { id: 'rom_mancini', name: 'Gianluca Mancini', team: 'Roma', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 94, baseAAS: 16, varAAS: 7 },
+            { id: 'rom_ndicka', name: 'Evan Ndicka', team: 'Roma', role: 'DEF', stars: 4, avatar: '🇨🇮', startChance: 92, baseAAS: 16, varAAS: 6 },
+            { id: 'rom_angelino', name: 'Angeliño', team: 'Roma', role: 'DEF', stars: 4, avatar: '🇪🇸', startChance: 88, baseAAS: 16, varAAS: 7 },
+            { id: 'rom_celik', name: 'Zeki Çelik', team: 'Roma', role: 'DEF', stars: 2, avatar: '🇹🇷', startChance: 70, baseAAS: 12, varAAS: 5 },
+            { id: 'rom_hermoso', name: 'Mario Hermoso', team: 'Roma', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 60, baseAAS: 13, varAAS: 6 },
+            { id: 'rom_hummels', name: 'Mats Hummels', team: 'Roma', role: 'DEF', stars: 3, avatar: '🇩🇪', startChance: 45, baseAAS: 14, varAAS: 6 },
+            { id: 'rom_kone', name: 'Manu Koné', team: 'Roma', role: 'MID', stars: 4, avatar: '🇫🇷', startChance: 88, baseAAS: 17, varAAS: 7 },
+            { id: 'rom_pellegrini', name: 'Lorenzo Pellegrini', team: 'Roma', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 82, baseAAS: 18, varAAS: 8 },
+            { id: 'rom_cristante', name: 'Bryan Cristante', team: 'Roma', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 78, baseAAS: 14, varAAS: 6 },
+            { id: 'rom_saelemaekers', name: 'Alexis Saelemaekers', team: 'Roma', role: 'MID', stars: 3, avatar: '🇧🇪', startChance: 65, baseAAS: 14, varAAS: 6 },
+            { id: 'rom_dybala', name: 'Paulo Dybala', team: 'Roma', role: 'FWD', stars: 5, avatar: '🇦🇷', startChance: 78, baseAAS: 22, varAAS: 9 },
+            { id: 'rom_dovbyk', name: 'Artem Dovbyk', team: 'Roma', role: 'FWD', stars: 4, avatar: '🇺🇦', startChance: 90, baseAAS: 19, varAAS: 9 },
+            { id: 'rom_soule', name: 'Matías Soulé', team: 'Roma', role: 'FWD', stars: 4, avatar: '🇦🇷', startChance: 75, baseAAS: 17, varAAS: 8 },
+            { id: 'rom_el_shaarawy', name: 'Stephan El Shaarawy', team: 'Roma', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 55, baseAAS: 13, varAAS: 6 },
+
+            // LAZIO (15)
+            { id: 'laz_provedel', name: 'Ivan Provedel', team: 'Lazio', role: 'GK', stars: 4, avatar: '🇮🇹', startChance: 88, baseAAS: 12, varAAS: 5 },
+            { id: 'laz_mandas', name: 'Christos Mandas', team: 'Lazio', role: 'GK', stars: 2, avatar: '🇬🇷', startChance: 18, baseAAS: 10, varAAS: 5 },
+            { id: 'laz_romagnoli', name: 'Alessio Romagnoli', team: 'Lazio', role: 'DEF', stars: 4, avatar: '🇮🇹', startChance: 92, baseAAS: 15, varAAS: 6 },
+            { id: 'laz_gila', name: 'Mario Gila', team: 'Lazio', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 84, baseAAS: 14, varAAS: 6 },
+            { id: 'laz_tavares', name: 'Nuno Tavares', team: 'Lazio', role: 'DEF', stars: 4, avatar: '🇵🇹', startChance: 86, baseAAS: 18, varAAS: 8 },
+            { id: 'laz_marusic', name: 'Adam Marušić', team: 'Lazio', role: 'DEF', stars: 3, avatar: '🇲🇪', startChance: 75, baseAAS: 13, varAAS: 5 },
+            { id: 'laz_rovella', name: 'Nicolò Rovella', team: 'Lazio', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 90, baseAAS: 17, varAAS: 7 },
+            { id: 'laz_guendouzi', name: 'Mattéo Guendouzi', team: 'Lazio', role: 'MID', stars: 4, avatar: '🇫🇷', startChance: 92, baseAAS: 17, varAAS: 7 },
+            { id: 'laz_vecino', name: 'Matías Vecino', team: 'Lazio', role: 'MID', stars: 3, avatar: '🇺🇾', startChance: 55, baseAAS: 13, varAAS: 6 },
+            { id: 'laz_castrovilli', name: 'Gaetano Castrovilli', team: 'Lazio', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 35, baseAAS: 11, varAAS: 5 },
+            { id: 'laz_zaccagni', name: 'Mattia Zaccagni', team: 'Lazio', role: 'FWD', stars: 5, avatar: '🇮🇹', startChance: 92, baseAAS: 20, varAAS: 9 },
+            { id: 'laz_castellanos', name: 'Valentín Castellanos', team: 'Lazio', role: 'FWD', stars: 4, avatar: '🇦🇷', startChance: 88, baseAAS: 18, varAAS: 8 },
+            { id: 'laz_dia', name: 'Boulaye Dia', team: 'Lazio', role: 'FWD', stars: 4, avatar: '🇸🇳', startChance: 84, baseAAS: 18, varAAS: 8 },
+            { id: 'laz_isaksen', name: 'Gustav Isaksen', team: 'Lazio', role: 'FWD', stars: 3, avatar: '🇩🇰', startChance: 65, baseAAS: 14, varAAS: 7 },
+            { id: 'laz_noslin', name: 'Tijjani Noslin', team: 'Lazio', role: 'FWD', stars: 3, avatar: '🇳🇱', startChance: 55, baseAAS: 13, varAAS: 6 },
+
+            // FIORENTINA (15)
+            { id: 'fio_degea', name: 'David De Gea', team: 'Fiorentina', role: 'GK', stars: 5, avatar: '🇪🇸', startChance: 95, baseAAS: 14, varAAS: 6 },
+            { id: 'fio_terracz', name: 'Pietro Terracciano', team: 'Fiorentina', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 10, baseAAS: 10, varAAS: 4 },
+            { id: 'fio_ranieri', name: 'Luca Ranieri', team: 'Fiorentina', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 86, baseAAS: 14, varAAS: 6 },
+            { id: 'fio_comuzzo', name: 'Pietro Comuzzo', team: 'Fiorentina', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 80, baseAAS: 14, varAAS: 6 },
+            { id: 'fio_dodo', name: 'Dodô', team: 'Fiorentina', role: 'DEF', stars: 4, avatar: '🇧🇷', startChance: 92, baseAAS: 17, varAAS: 7 },
+            { id: 'fio_gosens', name: 'Robin Gosens', team: 'Fiorentina', role: 'DEF', stars: 4, avatar: '🇩🇪', startChance: 90, baseAAS: 17, varAAS: 8 },
+            { id: 'fio_quarta', name: 'Lucas Martínez Quarta', team: 'Fiorentina', role: 'DEF', stars: 3, avatar: '🇦🇷', startChance: 65, baseAAS: 14, varAAS: 6 },
+            { id: 'fio_bove', name: 'Edoardo Bove', team: 'Fiorentina', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 88, baseAAS: 16, varAAS: 7 },
+            { id: 'fio_adli', name: 'Yacine Adli', team: 'Fiorentina', role: 'MID', stars: 3, avatar: '🇫🇷', startChance: 78, baseAAS: 16, varAAS: 7 },
+            { id: 'fio_cataldi', name: 'Danilo Cataldi', team: 'Fiorentina', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 75, baseAAS: 14, varAAS: 6 },
+            { id: 'fio_mandragora', name: 'Rolando Mandragora', team: 'Fiorentina', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 45, baseAAS: 12, varAAS: 5 },
+            { id: 'fio_colpani', name: 'Andrea Colpani', team: 'Fiorentina', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 85, baseAAS: 17, varAAS: 7 },
+            { id: 'fio_gudmundsson', name: 'Albert Guðmundsson', team: 'Fiorentina', role: 'FWD', stars: 4, avatar: '🇮🇸', startChance: 86, baseAAS: 19, varAAS: 9 },
+            { id: 'fio_kean', name: 'Moise Kean', team: 'Fiorentina', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 94, baseAAS: 20, varAAS: 9 },
+            { id: 'fio_sottil', name: 'Riccardo Sottil', team: 'Fiorentina', role: 'FWD', stars: 2, avatar: '🇮🇹', startChance: 40, baseAAS: 12, varAAS: 6 },
+
+            // BOLOGNA (15)
+            { id: 'bol_skorupski', name: 'Łukasz Skorupski', team: 'Bologna', role: 'GK', stars: 3, avatar: '🇵🇱', startChance: 75, baseAAS: 12, varAAS: 5 },
+            { id: 'bol_ravaglia', name: 'Federico Ravaglia', team: 'Bologna', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 30, baseAAS: 10, varAAS: 5 },
+            { id: 'bol_beukema', name: 'Sam Beukema', team: 'Bologna', role: 'DEF', stars: 4, avatar: '🇳🇱', startChance: 92, baseAAS: 16, varAAS: 6 },
+            { id: 'bol_lucumi', name: 'Jhon Lucumí', team: 'Bologna', role: 'DEF', stars: 3, avatar: '🇨🇴', startChance: 85, baseAAS: 15, varAAS: 6 },
+            { id: 'bol_posch', name: 'Stefan Posch', team: 'Bologna', role: 'DEF', stars: 3, avatar: '🇦🇹', startChance: 82, baseAAS: 14, varAAS: 6 },
+            { id: 'bol_miranda', name: 'Juan Miranda', team: 'Bologna', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 78, baseAAS: 14, varAAS: 6 },
+            { id: 'bol_holm', name: 'Emil Holm', team: 'Bologna', role: 'DEF', stars: 2, avatar: '🇸🇪', startChance: 45, baseAAS: 12, varAAS: 5 },
+            { id: 'bol_freuler', name: 'Remo Freuler', team: 'Bologna', role: 'MID', stars: 4, avatar: '🇨🇭', startChance: 94, baseAAS: 17, varAAS: 6 },
+            { id: 'bol_ferguson', name: 'Lewis Ferguson', team: 'Bologna', role: 'MID', stars: 4, avatar: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', startChance: 80, baseAAS: 18, varAAS: 8 },
+            { id: 'bol_aebischer', name: 'Michel Aebischer', team: 'Bologna', role: 'MID', stars: 3, avatar: '🇨🇭', startChance: 65, baseAAS: 13, varAAS: 5 },
+            { id: 'bol_moro', name: 'Nikola Moro', team: 'Bologna', role: 'MID', stars: 2, avatar: '🇭🇷', startChance: 50, baseAAS: 12, varAAS: 5 },
+            { id: 'bol_fabbian', name: 'Giovanni Fabbian', team: 'Bologna', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 60, baseAAS: 14, varAAS: 6 },
+            { id: 'bol_orsolini', name: 'Riccardo Orsolini', team: 'Bologna', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 86, baseAAS: 18, varAAS: 8 },
+            { id: 'bol_ndoye', name: 'Dan Ndoye', team: 'Bologna', role: 'FWD', stars: 4, avatar: '🇨🇭', startChance: 88, baseAAS: 18, varAAS: 8 },
+            { id: 'bol_castro', name: 'Santiago Castro', team: 'Bologna', role: 'FWD', stars: 4, avatar: '🇦🇷', startChance: 84, baseAAS: 17, varAAS: 8 },
+            { id: 'bol_dallinga', name: 'Thijs Dallinga', team: 'Bologna', role: 'FWD', stars: 3, avatar: '🇳🇱', startChance: 45, baseAAS: 14, varAAS: 7 },
+
+            // COMO (15)
+            { id: 'com_audero', name: 'Emil Audero', team: 'Como', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 65, baseAAS: 11, varAAS: 5 },
+            { id: 'com_reina', name: 'Pepe Reina', team: 'Como', role: 'GK', stars: 2, avatar: '🇪🇸', startChance: 35, baseAAS: 10, varAAS: 4 },
+            { id: 'com_dossena', name: 'Alberto Dossena', team: 'Como', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 88, baseAAS: 14, varAAS: 6 },
+            { id: 'com_kempf', name: 'Marc-Oliver Kempf', team: 'Como', role: 'DEF', stars: 3, avatar: '🇩🇪', startChance: 85, baseAAS: 14, varAAS: 6 },
+            { id: 'com_moreno', name: 'Alberto Moreno', team: 'Como', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 75, baseAAS: 13, varAAS: 6 },
+            { id: 'com_van_der_brempt', name: 'Ignace Van der Brempt', team: 'Como', role: 'DEF', stars: 2, avatar: '🇧🇪', startChance: 70, baseAAS: 12, varAAS: 5 },
+            { id: 'com_goldaniga', name: 'Edoardo Goldaniga', team: 'Como', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 40, baseAAS: 11, varAAS: 5 },
+            { id: 'com_sergi_roberto', name: 'Sergi Roberto', team: 'Como', role: 'MID', stars: 3, avatar: '🇪🇸', startChance: 82, baseAAS: 16, varAAS: 7 },
+            { id: 'com_perrone', name: 'Máximo Perrone', team: 'Como', role: 'MID', stars: 3, avatar: '🇦🇷', startChance: 84, baseAAS: 15, varAAS: 6 },
+            { id: 'com_paz', name: 'Nico Paz', team: 'Como', role: 'MID', stars: 4, avatar: '🇦🇷', startChance: 90, baseAAS: 19, varAAS: 8 },
+            { id: 'com_strefezza', name: 'Gabriel Strefezza', team: 'Como', role: 'MID', stars: 4, avatar: '🇧🇷', startChance: 88, baseAAS: 17, varAAS: 7 },
+            { id: 'com_mazzitelli', name: 'Luca Mazzitelli', team: 'Como', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 45, baseAAS: 12, varAAS: 5 },
+            { id: 'com_cutrone', name: 'Patrick Cutrone', team: 'Como', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 90, baseAAS: 18, varAAS: 8 },
+            { id: 'com_belotti', name: 'Andrea Belotti', team: 'Como', role: 'FWD', stars: 2, avatar: '🇮🇹', startChance: 40, baseAAS: 12, varAAS: 6 },
+            { id: 'com_fadera', name: 'Alieu Fadera', team: 'Como', role: 'FWD', stars: 3, avatar: '🇬🇲', startChance: 70, baseAAS: 14, varAAS: 7 },
+
+            // TORINO (15)
+            { id: 'tor_milinkovic', name: 'Vanja Milinković-Savić', team: 'Torino', role: 'GK', stars: 4, avatar: '🇷🇸', startChance: 96, baseAAS: 13, varAAS: 6 },
+            { id: 'tor_paleari', name: 'Alberto Paleari', team: 'Torino', role: 'GK', stars: 1, avatar: '🇮🇹', startChance: 8, baseAAS: 9, varAAS: 4 },
+            { id: 'tor_coco', name: 'Saúl Coco', team: 'Torino', role: 'DEF', stars: 3, avatar: '🇬🇶', startChance: 90, baseAAS: 15, varAAS: 6 },
+            { id: 'tor_maripan', name: 'Guillermo Maripán', team: 'Torino', role: 'DEF', stars: 3, avatar: '🇨🇱', startChance: 84, baseAAS: 14, varAAS: 6 },
+            { id: 'tor_masina', name: 'Adam Masina', team: 'Torino', role: 'DEF', stars: 2, avatar: '🇲🇦', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'tor_pedersen', name: 'Marcus Pedersen', team: 'Torino', role: 'DEF', stars: 2, avatar: '🇳🇴', startChance: 70, baseAAS: 12, varAAS: 5 },
+            { id: 'tor_sosa', name: 'Borna Sosa', team: 'Torino', role: 'DEF', stars: 3, avatar: '🇭🇷', startChance: 72, baseAAS: 13, varAAS: 6 },
+            { id: 'tor_ricci', name: 'Samuele Ricci', team: 'Torino', role: 'MID', stars: 4, avatar: '🇮🇹', startChance: 94, baseAAS: 18, varAAS: 7 },
+            { id: 'tor_ilic', name: 'Ivan Ilić', team: 'Torino', role: 'MID', stars: 4, avatar: '🇷🇸', startChance: 86, baseAAS: 16, varAAS: 7 },
+            { id: 'tor_tameze', name: 'Adrien Tameze', team: 'Torino', role: 'MID', stars: 2, avatar: '🇨🇲', startChance: 60, baseAAS: 12, varAAS: 5 },
+            { id: 'tor_gineitis', name: 'Gvidas Gineitis', team: 'Torino', role: 'MID', stars: 2, avatar: '🇱🇹', startChance: 35, baseAAS: 11, varAAS: 5 },
+            { id: 'tor_vlasic', name: 'Nikola Vlašić', team: 'Torino', role: 'MID', stars: 4, avatar: '🇭🇷', startChance: 82, baseAAS: 17, varAAS: 7 },
+            { id: 'tor_lazaro', name: 'Valentino Lazaro', team: 'Torino', role: 'MID', stars: 3, avatar: '🇦🇹', startChance: 80, baseAAS: 14, varAAS: 6 },
+            { id: 'tor_sanabria', name: 'Antonio Sanabria', team: 'Torino', role: 'FWD', stars: 3, avatar: '🇵🇾', startChance: 80, baseAAS: 15, varAAS: 7 },
+            { id: 'tor_adams', name: 'Ché Adams', team: 'Torino', role: 'FWD', stars: 4, avatar: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', startChance: 85, baseAAS: 17, varAAS: 8 },
+
+            // GENOA (15)
+            { id: 'gen_gollini', name: 'Pierluigi Gollini', team: 'Genoa', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 70, baseAAS: 12, varAAS: 5 },
+            { id: 'gen_leali', name: 'Nicola Leali', team: 'Genoa', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 35, baseAAS: 10, varAAS: 5 },
+            { id: 'gen_vasquez', name: 'Johan Vásquez', team: 'Genoa', role: 'DEF', stars: 3, avatar: '🇲🇽', startChance: 92, baseAAS: 15, varAAS: 6 },
+            { id: 'gen_bani', name: 'Mattia Bani', team: 'Genoa', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 84, baseAAS: 14, varAAS: 6 },
+            { id: 'gen_vogliacco', name: 'Alessandro Vogliacco', team: 'Genoa', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 75, baseAAS: 13, varAAS: 5 },
+            { id: 'gen_sabelli', name: 'Stefano Sabelli', team: 'Genoa', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 75, baseAAS: 12, varAAS: 5 },
+            { id: 'gen_martin', name: 'Aarón Martín', team: 'Genoa', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 82, baseAAS: 14, varAAS: 6 },
+            { id: 'gen_badelj', name: 'Milan Badelj', team: 'Genoa', role: 'MID', stars: 3, avatar: '🇭🇷', startChance: 78, baseAAS: 14, varAAS: 6 },
+            { id: 'gen_frendrup', name: 'Morten Frendrup', team: 'Genoa', role: 'MID', stars: 4, avatar: '🇩🇰', startChance: 95, baseAAS: 19, varAAS: 7 },
+            { id: 'gen_thorsby', name: 'Morten Thorsby', team: 'Genoa', role: 'MID', stars: 2, avatar: '🇳🇴', startChance: 70, baseAAS: 13, varAAS: 5 },
+            { id: 'gen_miretti', name: 'Fabio Miretti', team: 'Genoa', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 75, baseAAS: 15, varAAS: 7 },
+            { id: 'gen_messias', name: 'Junior Messias', team: 'Genoa', role: 'FWD', stars: 3, avatar: '🇧🇷', startChance: 60, baseAAS: 14, varAAS: 7 },
+            { id: 'gen_pinamonti', name: 'Andrea Pinamonti', team: 'Genoa', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 92, baseAAS: 16, varAAS: 8 },
+            { id: 'gen_ekuban', name: 'Caleb Ekuban', team: 'Genoa', role: 'FWD', stars: 2, avatar: '🇬🇭', startChance: 45, baseAAS: 11, varAAS: 5 },
+            { id: 'gen_balotelli', name: 'Mario Balotelli', team: 'Genoa', role: 'FWD', stars: 2, avatar: '🇮🇹', startChance: 35, baseAAS: 12, varAAS: 7 },
+
+            // PARMA (15)
+            { id: 'par_suzuki', name: 'Zion Suzuki', team: 'Parma', role: 'GK', stars: 3, avatar: '🇯🇵', startChance: 92, baseAAS: 12, varAAS: 6 },
+            { id: 'par_chichizola', name: 'Leandro Chichizola', team: 'Parma', role: 'GK', stars: 2, avatar: '🇦🇷', startChance: 10, baseAAS: 9, varAAS: 4 },
+            { id: 'par_circati', name: 'Alessandro Circati', team: 'Parma', role: 'DEF', stars: 3, avatar: '🇦🇺', startChance: 82, baseAAS: 14, varAAS: 6 },
+            { id: 'par_delprato', name: 'Enrico Delprato', team: 'Parma', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 94, baseAAS: 15, varAAS: 6 },
+            { id: 'par_valeri', name: 'Emanuele Valeri', team: 'Parma', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 85, baseAAS: 14, varAAS: 6 },
+            { id: 'par_balogh', name: 'Botond Balogh', team: 'Parma', role: 'DEF', stars: 2, avatar: '🇭🇺', startChance: 75, baseAAS: 12, varAAS: 5 },
+            { id: 'par_coulibaly', name: 'Woyo Coulibaly', team: 'Parma', role: 'DEF', stars: 2, avatar: '🇫🇷', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'par_bernabé', name: 'Adrián Bernabé', team: 'Parma', role: 'MID', stars: 4, avatar: '🇪🇸', startChance: 92, baseAAS: 18, varAAS: 8 },
+            { id: 'par_sohm', name: 'Simon Sohm', team: 'Parma', role: 'MID', stars: 3, avatar: '🇨🇭', startChance: 88, baseAAS: 14, varAAS: 6 },
+            { id: 'par_estevez', name: 'Nahuel Estévez', team: 'Parma', role: 'MID', stars: 2, avatar: '🇦🇷', startChance: 55, baseAAS: 12, varAAS: 5 },
+            { id: 'par_keita', name: 'Mandela Keita', team: 'Parma', role: 'MID', stars: 2, avatar: '🇧🇪', startChance: 50, baseAAS: 12, varAAS: 5 },
+            { id: 'par_man', name: 'Dennis Man', team: 'Parma', role: 'FWD', stars: 4, avatar: '🇷🇴', startChance: 92, baseAAS: 19, varAAS: 8 },
+            { id: 'par_mihaila', name: 'Valentin Mihăilă', team: 'Parma', role: 'FWD', stars: 3, avatar: '🇷🇴', startChance: 82, baseAAS: 15, varAAS: 7 },
+            { id: 'par_bonny', name: 'Ange-Yoan Bonny', team: 'Parma', role: 'FWD', stars: 4, avatar: '🇫🇷', startChance: 88, baseAAS: 17, varAAS: 8 },
+            { id: 'par_cancellieri', name: 'Matteo Cancellieri', team: 'Parma', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 60, baseAAS: 14, varAAS: 7 },
+
+            // UDINESE (15)
+            { id: 'udi_okoye', name: 'Maduka Okoye', team: 'Udinese', role: 'GK', stars: 3, avatar: '🇳🇬', startChance: 94, baseAAS: 12, varAAS: 6 },
+            { id: 'udi_sava', name: 'Răzvan Sava', team: 'Udinese', role: 'GK', stars: 1, avatar: '🇷🇴', startChance: 10, baseAAS: 9, varAAS: 4 },
+            { id: 'udi_bijol', name: 'Jaka Bijol', team: 'Udinese', role: 'DEF', stars: 4, avatar: '🇸🇮', startChance: 95, baseAAS: 16, varAAS: 7 },
+            { id: 'udi_giannetti', name: 'Lautaro Giannetti', team: 'Udinese', role: 'DEF', stars: 2, avatar: '🇦🇷', startChance: 78, baseAAS: 12, varAAS: 5 },
+            { id: 'udi_kabasele', name: 'Christian Kabasele', team: 'Udinese', role: 'DEF', stars: 2, avatar: '🇧🇪', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'udi_ehizibue', name: 'Kingsley Ehizibue', team: 'Udinese', role: 'DEF', stars: 3, avatar: '🇳🇬', startChance: 85, baseAAS: 14, varAAS: 6 },
+            { id: 'udi_kamara', name: 'Hassane Kamara', team: 'Udinese', role: 'DEF', stars: 3, avatar: '🇨🇮', startChance: 82, baseAAS: 13, varAAS: 6 },
+            { id: 'udi_lovric', name: 'Sandi Lovrić', team: 'Udinese', role: 'MID', stars: 3, avatar: '🇸🇮', startChance: 85, baseAAS: 15, varAAS: 6 },
+            { id: 'udi_karlstrom', name: 'Jesper Karlström', team: 'Udinese', role: 'MID', stars: 3, avatar: '🇸🇪', startChance: 90, baseAAS: 15, varAAS: 6 },
+            { id: 'udi_payero', name: 'Martín Payero', team: 'Udinese', role: 'MID', stars: 2, avatar: '🇦🇷', startChance: 65, baseAAS: 13, varAAS: 6 },
+            { id: 'udi_ekkelenkamp', name: 'Jurgen Ekkelenkamp', team: 'Udinese', role: 'MID', stars: 2, avatar: '🇳🇱', startChance: 55, baseAAS: 12, varAAS: 5 },
+            { id: 'udi_thauvin', name: 'Florian Thauvin', team: 'Udinese', role: 'FWD', stars: 4, avatar: '🇫🇷', startChance: 86, baseAAS: 18, varAAS: 8 },
+            { id: 'udi_lucca', name: 'Lorenzo Lucca', team: 'Udinese', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 92, baseAAS: 18, varAAS: 8 },
+            { id: 'udi_bravo', name: 'Iker Bravo', team: 'Udinese', role: 'FWD', stars: 2, avatar: '🇪🇸', startChance: 40, baseAAS: 12, varAAS: 6 },
+            { id: 'udi_davis', name: 'Keinan Davis', team: 'Udinese', role: 'FWD', stars: 2, avatar: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', startChance: 45, baseAAS: 12, varAAS: 6 },
+
+            // SASSUOLO (15)
+            { id: 'sas_moldovan', name: 'Horațiu Moldovan', team: 'Sassuolo', role: 'GK', stars: 3, avatar: '🇷🇴', startChance: 90, baseAAS: 12, varAAS: 5 },
+            { id: 'sas_satalino', name: 'Giacomo Satalino', team: 'Sassuolo', role: 'GK', stars: 1, avatar: '🇮🇹', startChance: 12, baseAAS: 9, varAAS: 4 },
+            { id: 'sas_toljan', name: 'Jeremy Toljan', team: 'Sassuolo', role: 'DEF', stars: 3, avatar: '🇩🇪', startChance: 88, baseAAS: 13, varAAS: 5 },
+            { id: 'sas_doig', name: 'Josh Doig', team: 'Sassuolo', role: 'DEF', stars: 3, avatar: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', startChance: 85, baseAAS: 14, varAAS: 6 },
+            { id: 'sas_romagnoli', name: 'Filippo Romagna', team: 'Sassuolo', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 78, baseAAS: 12, varAAS: 5 },
+            { id: 'sas_muharemovic', name: 'Tarik Muharemović', team: 'Sassuolo', role: 'DEF', stars: 2, avatar: '🇧🇦', startChance: 70, baseAAS: 12, varAAS: 5 },
+            { id: 'sas_odenthal', name: 'Cas Odenthal', team: 'Sassuolo', role: 'DEF', stars: 2, avatar: '🇳🇱', startChance: 60, baseAAS: 11, varAAS: 5 },
+            { id: 'sas_boloca', name: 'Daniel Boloca', team: 'Sassuolo', role: 'MID', stars: 3, avatar: '🇷🇴', startChance: 88, baseAAS: 15, varAAS: 6 },
+            { id: 'sas_obiang', name: 'Pedro Obiang', team: 'Sassuolo', role: 'MID', stars: 2, avatar: '🇬🇶', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'sas_thorstvedt', name: 'Kristian Thorstvedt', team: 'Sassuolo', role: 'MID', stars: 4, avatar: '🇳🇴', startChance: 92, baseAAS: 17, varAAS: 7 },
+            { id: 'sas_kumi', name: 'Justin Kumi', team: 'Sassuolo', role: 'MID', stars: 1, avatar: '🇮🇹', startChance: 25, baseAAS: 10, varAAS: 4 },
+            { id: 'sas_berardi', name: 'Domenico Berardi', team: 'Sassuolo', role: 'FWD', stars: 5, avatar: '🇮🇹', startChance: 88, baseAAS: 21, varAAS: 9 },
+            { id: 'sas_lauriente', name: 'Armand Laurienté', team: 'Sassuolo', role: 'FWD', stars: 4, avatar: '🇫🇷', startChance: 90, baseAAS: 18, varAAS: 8 },
+            { id: 'sas_mulattieri', name: 'Samuele Mulattieri', team: 'Sassuolo', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 75, baseAAS: 14, varAAS: 7 },
+            { id: 'sas_volpato', name: 'Cristian Volpato', team: 'Sassuolo', role: 'FWD', stars: 2, avatar: '🇦🇺', startChance: 45, baseAAS: 12, varAAS: 6 },
+
+            // CAGLIARI (15)
+            { id: 'cag_scuffet', name: 'Simone Scuffet', team: 'Cagliari', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 78, baseAAS: 11, varAAS: 5 },
+            { id: 'cag_sherri', name: 'Alen Sherri', team: 'Cagliari', role: 'GK', stars: 1, avatar: '🇦🇱', startChance: 25, baseAAS: 9, varAAS: 4 },
+            { id: 'cag_mina', name: 'Yerry Mina', team: 'Cagliari', role: 'DEF', stars: 3, avatar: '🇨🇴', startChance: 85, baseAAS: 14, varAAS: 7 },
+            { id: 'cag_luperto', name: 'Sebastiano Luperto', team: 'Cagliari', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 94, baseAAS: 15, varAAS: 6 },
+            { id: 'cag_zappa', name: 'Gabriele Zappa', team: 'Cagliari', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 86, baseAAS: 13, varAAS: 5 },
+            { id: 'cag_augelo', name: 'Tommaso Augello', team: 'Cagliari', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 82, baseAAS: 13, varAAS: 5 },
+            { id: 'cag_palomino', name: 'José Luis Palomino', team: 'Cagliari', role: 'DEF', stars: 2, avatar: '🇦🇷', startChance: 45, baseAAS: 11, varAAS: 5 },
+            { id: 'cag_marin', name: 'Răzvan Marin', team: 'Cagliari', role: 'MID', stars: 3, avatar: '🇷🇴', startChance: 85, baseAAS: 15, varAAS: 6 },
+            { id: 'cag_adopo', name: 'Michel Adopo', team: 'Cagliari', role: 'MID', stars: 2, avatar: '🇫🇷', startChance: 75, baseAAS: 13, varAAS: 5 },
+            { id: 'cag_makoumbou', name: 'Antoine Makoumbou', team: 'Cagliari', role: 'MID', stars: 2, avatar: '🇨🇬', startChance: 72, baseAAS: 13, varAAS: 5 },
+            { id: 'cag_deiola', name: 'Alessandro Deiola', team: 'Cagliari', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 60, baseAAS: 12, varAAS: 5 },
+            { id: 'cag_gaetano', name: 'Gianluca Gaetano', team: 'Cagliari', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 80, baseAAS: 15, varAAS: 7 },
+            { id: 'cag_piccoli', name: 'Roberto Piccoli', team: 'Cagliari', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 84, baseAAS: 15, varAAS: 7 },
+            { id: 'cag_luvumbo', name: 'Zito Luvumbo', team: 'Cagliari', role: 'FWD', stars: 3, avatar: '🇦🇴', startChance: 78, baseAAS: 15, varAAS: 7 },
+            { id: 'cag_lapadula', name: 'Gianluca Lapadula', team: 'Cagliari', role: 'FWD', stars: 2, avatar: '🇵🇪', startChance: 40, baseAAS: 12, varAAS: 6 },
+
+            // VERONA (15)
+            { id: 'ver_montipo', name: 'Lorenzo Montipò', team: 'Verona', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 92, baseAAS: 12, varAAS: 6 },
+            { id: 'ver_perilli', name: 'Simone Perilli', team: 'Verona', role: 'GK', stars: 1, avatar: '🇮🇹', startChance: 10, baseAAS: 9, varAAS: 4 },
+            { id: 'ver_dawidowicz', name: 'Paweł Dawidowicz', team: 'Verona', role: 'DEF', stars: 2, avatar: '🇵🇱', startChance: 80, baseAAS: 13, varAAS: 5 },
+            { id: 'ver_magnani', name: 'Giangiacomo Magnani', team: 'Verona', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 82, baseAAS: 13, varAAS: 5 },
+            { id: 'ver_coppola', name: 'Diego Coppola', team: 'Verona', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 86, baseAAS: 14, varAAS: 6 },
+            { id: 'ver_tchatchoua', name: 'Jackson Tchatchoua', team: 'Verona', role: 'DEF', stars: 3, avatar: '🇨🇲', startChance: 88, baseAAS: 14, varAAS: 6 },
+            { id: 'ver_bradancic', name: 'Domagoj Bradarić', team: 'Verona', role: 'DEF', stars: 2, avatar: '🇭🇷', startChance: 78, baseAAS: 12, varAAS: 5 },
+            { id: 'ver_duda', name: 'Ondrej Duda', team: 'Verona', role: 'MID', stars: 3, avatar: '🇸🇰', startChance: 88, baseAAS: 16, varAAS: 6 },
+            { id: 'ver_belahyane', name: 'Reda Belahyane', team: 'Verona', role: 'MID', stars: 3, avatar: '🇲🇦', startChance: 90, baseAAS: 15, varAAS: 6 },
+            { id: 'ver_serdar', name: 'Suat Serdar', team: 'Verona', role: 'MID', stars: 2, avatar: '🇩🇪', startChance: 70, baseAAS: 13, varAAS: 5 },
+            { id: 'ver_suslov', name: 'Tomáš Suslov', team: 'Verona', role: 'MID', stars: 3, avatar: '🇸🇰', startChance: 82, baseAAS: 15, varAAS: 7 },
+            { id: 'ver_kastanos', name: 'Grigoris Kastanos', team: 'Verona', role: 'MID', stars: 2, avatar: '🇨🇾', startChance: 60, baseAAS: 12, varAAS: 5 },
+            { id: 'ver_tengstedt', name: 'Casper Tengstedt', team: 'Verona', role: 'FWD', stars: 3, avatar: '🇩🇰', startChance: 84, baseAAS: 15, varAAS: 7 },
+            { id: 'ver_mosquera', name: 'Daniel Mosquera', team: 'Verona', role: 'FWD', stars: 2, avatar: '🇨🇴', startChance: 60, baseAAS: 13, varAAS: 6 },
+            { id: 'ver_livramento', name: 'Dailon Livramento', team: 'Verona', role: 'FWD', stars: 2, avatar: '🇨🇻', startChance: 55, baseAAS: 12, varAAS: 6 },
+
+            // MONZA (15)
+            { id: 'mon_turati', name: 'Stefano Turati', team: 'Monza', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 85, baseAAS: 12, varAAS: 5 },
+            { id: 'mon_pizzignacco', name: 'Semuel Pizzignacco', team: 'Monza', role: 'GK', stars: 2, avatar: '🇮🇹', startChance: 20, baseAAS: 10, varAAS: 5 },
+            { id: 'mon_izzo', name: 'Armando Izzo', team: 'Monza', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 86, baseAAS: 14, varAAS: 6 },
+            { id: 'mon_mari', name: 'Pablo Marí', team: 'Monza', role: 'DEF', stars: 3, avatar: '🇪🇸', startChance: 92, baseAAS: 15, varAAS: 6 },
+            { id: 'mon_carboni', name: 'Andrea Carboni', team: 'Monza', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 80, baseAAS: 13, varAAS: 5 },
+            { id: 'mon_kyriakopoulos', name: 'Giorgos Kyriakopoulos', team: 'Monza', role: 'DEF', stars: 3, avatar: '🇬🇷', startChance: 86, baseAAS: 14, varAAS: 6 },
+            { id: 'mon_pereira', name: 'Pedro Pereira', team: 'Monza', role: 'DEF', stars: 2, avatar: '🇵🇹', startChance: 78, baseAAS: 12, varAAS: 5 },
+            { id: 'mon_pessina', name: 'Matteo Pessina', team: 'Monza', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 90, baseAAS: 15, varAAS: 6 },
+            { id: 'mon_boni', name: 'Warren Bondo', team: 'Monza', role: 'MID', stars: 2, avatar: '🇫🇷', startChance: 82, baseAAS: 13, varAAS: 5 },
+            { id: 'mon_bianco', name: 'Alessandro Bianco', team: 'Monza', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'mon_sensi', name: 'Stefano Sensi', team: 'Monza', role: 'MID', stars: 2, avatar: '🇮🇹', startChance: 35, baseAAS: 13, varAAS: 6 },
+            { id: 'mon_maldini', name: 'Daniel Maldini', team: 'Monza', role: 'FWD', stars: 4, avatar: '🇮🇹', startChance: 88, baseAAS: 17, varAAS: 8 },
+            { id: 'mon_djuric', name: 'Milan Đurić', team: 'Monza', role: 'FWD', stars: 3, avatar: '🇧🇦', startChance: 86, baseAAS: 15, varAAS: 6 },
+            { id: 'mon_mota', name: 'Dany Mota', team: 'Monza', role: 'FWD', stars: 3, avatar: '🇵🇹', startChance: 84, baseAAS: 15, varAAS: 7 },
+            { id: 'mon_caprari', name: 'Gianluca Caprari', team: 'Monza', role: 'FWD', stars: 2, avatar: '🇮🇹', startChance: 50, baseAAS: 12, varAAS: 6 },
+
+            // LECCE (15)
+            { id: 'lec_falcone', name: 'Wladimiro Falcone', team: 'Lecce', role: 'GK', stars: 3, avatar: '🇮🇹', startChance: 98, baseAAS: 13, varAAS: 6 },
+            { id: 'lec_fruchtl', name: 'Christian Früchtl', team: 'Lecce', role: 'GK', stars: 1, avatar: '🇩🇪', startChance: 5, baseAAS: 9, varAAS: 4 },
+            { id: 'lec_baschirotto', name: 'Federico Baschirotto', team: 'Lecce', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 96, baseAAS: 15, varAAS: 6 },
+            { id: 'lec_gaspar', name: 'Kialonda Gaspar', team: 'Lecce', role: 'DEF', stars: 3, avatar: '🇦🇴', startChance: 92, baseAAS: 14, varAAS: 6 },
+            { id: 'lec_gallagher', name: 'Andy Pelmard', team: 'Lecce', role: 'DEF', stars: 2, avatar: '🇫🇷', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'lec_gallo', name: 'Antonino Gallo', team: 'Lecce', role: 'DEF', stars: 3, avatar: '🇮🇹', startChance: 90, baseAAS: 14, varAAS: 6 },
+            { id: 'lec_guilbert', name: 'Frédéric Guilbert', team: 'Lecce', role: 'DEF', stars: 2, avatar: '🇫🇷', startChance: 85, baseAAS: 13, varAAS: 5 },
+            { id: 'lec_ramadani', name: 'Ylber Ramadani', team: 'Lecce', role: 'MID', stars: 3, avatar: '🇦🇱', startChance: 92, baseAAS: 14, varAAS: 5 },
+            { id: 'lec_coulibaly', name: 'Lassana Coulibaly', team: 'Lecce', role: 'MID', stars: 2, avatar: '🇲🇱', startChance: 85, baseAAS: 13, varAAS: 5 },
+            { id: 'lec_rafia', name: 'Hamza Rafia', team: 'Lecce', role: 'MID', stars: 2, avatar: '🇹🇳', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'lec_marchwinski', name: 'Filip Marchwiński', team: 'Lecce', role: 'MID', stars: 2, avatar: '🇵🇱', startChance: 45, baseAAS: 12, varAAS: 6 },
+            { id: 'lec_dorgu', name: 'Patrick Dorgu', team: 'Lecce', role: 'FWD', stars: 4, avatar: '🇩🇰', startChance: 92, baseAAS: 17, varAAS: 8 },
+            { id: 'lec_krstovic', name: 'Nikola Krstović', team: 'Lecce', role: 'FWD', stars: 3, avatar: '🇲🇪', startChance: 90, baseAAS: 16, varAAS: 8 },
+            { id: 'lec_banda', name: 'Lameck Banda', team: 'Lecce', role: 'FWD', stars: 2, avatar: '🇿🇲', startChance: 65, baseAAS: 13, varAAS: 6 },
+            { id: 'lec_rebic', name: 'Ante Rebić', team: 'Lecce', role: 'FWD', stars: 2, avatar: '🇭🇷', startChance: 50, baseAAS: 12, varAAS: 6 },
+
+            // VENEZIA (15)
+            { id: 'ven_joronen', name: 'Jesse Joronen', team: 'Venezia', role: 'GK', stars: 2, avatar: '🇫🇮', startChance: 55, baseAAS: 11, varAAS: 5 },
+            { id: 'ven_stankovic', name: 'Filip Stanković', team: 'Venezia', role: 'GK', stars: 3, avatar: '🇷🇸', startChance: 55, baseAAS: 12, varAAS: 5 },
+            { id: 'ven_idzes', name: 'Jay Idzes', team: 'Venezia', role: 'DEF', stars: 3, avatar: '🇮🇩', startChance: 92, baseAAS: 14, varAAS: 6 },
+            { id: 'ven_svoboda', name: 'Michael Svoboda', team: 'Venezia', role: 'DEF', stars: 2, avatar: '🇦🇹', startChance: 86, baseAAS: 13, varAAS: 5 },
+            { id: 'ven_sverko', name: 'Marin Šverko', team: 'Venezia', role: 'DEF', stars: 2, avatar: '🇭🇷', startChance: 75, baseAAS: 12, varAAS: 5 },
+            { id: 'ven_candela', name: 'Antonio Candela', team: 'Venezia', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 85, baseAAS: 12, varAAS: 5 },
+            { id: 'ven_zampano', name: 'Francesco Zampano', team: 'Venezia', role: 'DEF', stars: 2, avatar: '🇮🇹', startChance: 84, baseAAS: 13, varAAS: 5 },
+            { id: 'ven_nicolussi', name: 'Hans Nicolussi Caviglia', team: 'Venezia', role: 'MID', stars: 3, avatar: '🇮🇹', startChance: 88, baseAAS: 15, varAAS: 6 },
+            { id: 'ven_busio', name: 'Gianluca Busio', team: 'Venezia', role: 'MID', stars: 3, avatar: '🇺🇸', startChance: 88, baseAAS: 15, varAAS: 6 },
+            { id: 'ven_andersen', name: 'Magnus Kofod Andersen', team: 'Venezia', role: 'MID', stars: 2, avatar: '🇩🇰', startChance: 65, baseAAS: 12, varAAS: 5 },
+            { id: 'ven_ellertsson', name: 'Mikael Egill Ellertsson', team: 'Venezia', role: 'MID', stars: 2, avatar: '🇮🇸', startChance: 78, baseAAS: 13, varAAS: 5 },
+            { id: 'ven_oristanio', name: 'Gaetano Oristanio', team: 'Venezia', role: 'FWD', stars: 3, avatar: '🇮🇹', startChance: 84, baseAAS: 16, varAAS: 7 },
+            { id: 'ven_pohjanpalo', name: 'Joel Pohjanpalo', team: 'Venezia', role: 'FWD', stars: 3, avatar: '🇫🇮', startChance: 92, baseAAS: 17, varAAS: 8 },
+            { id: 'ven_gytkjaer', name: 'Christian Gytkjær', team: 'Venezia', role: 'FWD', stars: 2, avatar: '🇩🇰', startChance: 45, baseAAS: 12, varAAS: 6 },
+            { id: 'ven_yekesi', name: 'John Yeboah', team: 'Venezia', role: 'FWD', stars: 2, avatar: '🇪🇨', startChance: 50, baseAAS: 12, varAAS: 6 }
+        ];
+
+        // Global Game State
+        const STATE = {
+            coins: 1500,
+            gameweek: 1,
+            simSpeed: 1, // 0.5x = 550ms, 1x = 280ms, 2x = 110ms
+            fixtures: [],
+            collection: [],
+            lineup: {
+                FWD: null,
+                EXTRA: null,
+                DEF: null,
+                GK: null,
+                MID: null
+            },
+            captainSlot: 'EXTRA',
+            currentFilter: 'ALL',
+            selectingSlot: null,
+            isSimulating: false,
+            packQueue: [],
+            welcomePackShown: false
+        };
+
+        function saveGame() {
+            try {
+                localStorage.setItem('sorare_seriea_2627_sim_v1', JSON.stringify({
+                    coins: STATE.coins,
+                    gameweek: STATE.gameweek,
+                    collection: STATE.collection,
+                    captainSlot: STATE.captainSlot,
+                    welcomePackShown: STATE.welcomePackShown,
+                    lineupIds: {
+                        FWD: STATE.lineup.FWD ? STATE.lineup.FWD.uid : null,
+                        EXTRA: STATE.lineup.EXTRA ? STATE.lineup.EXTRA.uid : null,
+                        DEF: STATE.lineup.DEF ? STATE.lineup.DEF.uid : null,
+                        GK: STATE.lineup.GK ? STATE.lineup.GK.uid : null,
+                        MID: STATE.lineup.MID ? STATE.lineup.MID.uid : null
+                    }
+                }));
+            } catch(e) {}
+        }
+
+        function loadGame() {
+            try {
+                const raw = localStorage.getItem('sorare_seriea_2627_sim_v1');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    STATE.coins = data.coins || 1500;
+                    STATE.gameweek = data.gameweek || 1;
+                    STATE.collection = data.collection || [];
+                    STATE.captainSlot = data.captainSlot || 'EXTRA';
+                    STATE.welcomePackShown = data.welcomePackShown || false;
+
+                    if (data.lineupIds) {
+                        ['FWD', 'EXTRA', 'DEF', 'GK', 'MID'].forEach(slot => {
+                            STATE.lineup[slot] = STATE.collection.find(c => c.uid === data.lineupIds[slot]) || null;
+                        });
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function updateCoinsDisplay() {
+            document.getElementById('player-coins').innerText = STATE.coins.toLocaleString();
+        }
+
+        // Match fixture generation: pairings of 20 clubs
+        function generateGameweekFixtures() {
+            const teamNames = Object.keys(SERIE_A_TEAMS);
+            const shuffled = [...teamNames].sort(() => 0.5 - Math.random());
+            const fixtures = [];
+            for (let i = 0; i < shuffled.length; i += 2) {
+                fixtures.push({
+                    home: shuffled[i],
+                    away: shuffled[i+1],
+                    homeScore: 0,
+                    awayScore: 0
+                });
+            }
+            STATE.fixtures = fixtures;
+        }
+
+        function getTeamMatchup(teamName) {
+            const match = STATE.fixtures.find(m => m.home === teamName || m.away === teamName);
+            if (!match) {
+                return { opponent: '---', oppCode: '---', isHome: true, venueText: 'CASA 🏠', diff: 'yellow', winProb: 50 };
+            }
+            const isHome = match.home === teamName;
+            const oppTeamName = isHome ? match.away : match.home;
+            const oppInfo = SERIE_A_TEAMS[oppTeamName] || { code: oppTeamName.slice(0,3).toUpperCase(), tier: 3 };
+            const myInfo = SERIE_A_TEAMS[teamName] || { tier: 3 };
+
+            let base = 48;
+            base += (oppInfo.tier - myInfo.tier) * 11;
+            base += isHome ? 7 : -7;
+            const winProb = Math.min(85, Math.max(12, base));
+
+            let diff = 'yellow';
+            if (winProb >= 56) diff = 'green';
+            else if (winProb <= 34) diff = 'red';
+
+            return {
+                opponent: oppTeamName,
+                oppCode: oppInfo.code,
+                isHome: isHome,
+                venueText: isHome ? 'CASA 🏠' : 'TRASFERTA ✈️',
+                diff: diff,
+                winProb: Math.round(winProb)
+            };
+        }
+
+        function generateCard(override = {}) {
+            let pool = SERIE_A_PLAYERS;
+            if (override.role) pool = pool.filter(p => p.role === override.role);
+            if (override.stars) pool = pool.filter(p => p.stars === override.stars);
+            if (pool.length === 0) pool = SERIE_A_PLAYERS;
+
+            const base = pool[Math.floor(Math.random() * pool.length)];
+            return {
+                ...base,
+                uid: 'card_' + Math.random().toString(36).substring(2, 9)
+            };
+        }
+
+        // Welcome Pack on first launch: 10 Limited Cards with guaranteed starter GK!
+        function triggerWelcomePack() {
+            const cards = [];
+            // Guaranteed Starter GK
+            const gkPool = SERIE_A_PLAYERS.filter(p => p.role === 'GK' && p.stars >= 3 && p.startChance >= 85);
+            const starterGK = gkPool[Math.floor(Math.random() * gkPool.length)] || SERIE_A_PLAYERS.find(p => p.id === 'lec_falcone');
+            cards.push({ ...starterGK, uid: 'card_gk_welc' });
+
+            // 3 DEFs
+            for (let i = 0; i < 3; i++) {
+                const min = i === 0 ? 3 : 2;
+                const pool = SERIE_A_PLAYERS.filter(p => p.role === 'DEF' && p.stars >= min);
+                const p = pool[Math.floor(Math.random() * pool.length)];
+                cards.push({ ...p, uid: 'card_def_' + i + '_' + Math.random().toString(36).substring(2,5) });
+            }
+
+            // 3 MIDs
+            for (let i = 0; i < 3; i++) {
+                const min = i === 0 ? 3 : 2;
+                const pool = SERIE_A_PLAYERS.filter(p => p.role === 'MID' && p.stars >= min);
+                const p = pool[Math.floor(Math.random() * pool.length)];
+                cards.push({ ...p, uid: 'card_mid_' + i + '_' + Math.random().toString(36).substring(2,5) });
+            }
+
+            // 3 FWDs
+            for (let i = 0; i < 3; i++) {
+                const min = i === 0 ? 3 : 2;
+                const pool = SERIE_A_PLAYERS.filter(p => p.role === 'FWD' && p.stars >= min);
+                const p = pool[Math.floor(Math.random() * pool.length)];
+                cards.push({ ...p, uid: 'card_fwd_' + i + '_' + Math.random().toString(36).substring(2,5) });
+            }
+
+            STATE.packQueue = cards.map(c => ({
+                card: c,
+                isDuplicate: false,
+                duplicateValue: DUPLICATE_COIN_VALUES[c.stars] || 80,
+                revealed: false
+            }));
+
+            // Auto-assign starter lineup
+            STATE.lineup.GK = cards[0];
+            STATE.lineup.DEF = cards[1];
+            STATE.lineup.MID = cards[4];
+            STATE.lineup.FWD = cards[7];
+            STATE.lineup.EXTRA = cards[8];
+
+            const modal = document.getElementById('pack-opening-modal');
+            const pack = document.getElementById('interactive-pack');
+            const cardsContainer = document.getElementById('pack-cards-container');
+            const closeBtn = document.getElementById('pack-close-btn');
+
+            document.getElementById('pack-modal-title').innerText = "🎉 BENVENUTO SU SORARE SERIE A!";
+            document.getElementById('pack-modal-desc').innerText = "Ecco il tuo Starter Pack da 10 Carte Limited con almeno 1 Portiere titolare garantito!";
+            document.getElementById('pack-foil-title').innerText = "WELCOME PACK (10 CARTE)";
+
+            pack.classList.remove('hidden');
+            cardsContainer.classList.add('hidden');
+            cardsContainer.innerHTML = '';
+            closeBtn.classList.add('hidden');
+            modal.classList.remove('hidden');
+
+            STATE.welcomePackShown = true;
+            saveGame();
+        }
+
+        function renderCardHTML(card, options = {}) {
+            const isPitch = options.isPitch || false;
+            const isCaptain = options.isCaptain || false;
+            const matchup = getTeamMatchup(card.team);
+
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= card.stars) {
+                    starsHTML += `<span class="text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.9)] text-[10px]">★</span>`;
+                } else {
+                    starsHTML += `<span class="text-slate-600 text-[10px]">☆</span>`;
+                }
+            }
+
+            let startBadgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+            if (card.startChance <= 25) startBadgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+            else if (card.startChance <= 65) startBadgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+
+            const roleColors = {
+                GK: 'text-emerald-400',
+                DEF: 'text-blue-400',
+                MID: 'text-amber-400',
+                FWD: 'text-rose-400'
+            };
+
+            const auraClass = card.stars === 5 ? 'aura-star5' : (card.stars === 4 ? 'aura-star4' : '');
+            const captainClass = isCaptain ? 'card-captain-highlight' : '';
+
+            // Card on tactical pitch
+            if (isPitch) {
+                return `
+                    <div class="sorare-card-frame ${captainClass} ${auraClass} w-28 sm:w-36 h-36 sm:h-44 p-2 flex flex-col justify-between">
+                        <div class="flex items-center justify-between z-10">
+                            <span class="text-[9px] font-mono font-black ${roleColors[card.role]} bg-black/60 px-1 rounded">${card.role}</span>
+                            ${isCaptain ? `
+                                <div class="w-5 h-5 rounded-full bg-sorare-neonPink text-white font-black text-[10px] flex items-center justify-center shadow-lg" title="Capitano (x1.5 Punti)">
+                                    C
+                                </div>
+                            ` : `<span class="text-[8px] font-mono text-yellow-400 font-bold">LTD</span>`}
+                        </div>
+
+                        <div class="flex flex-col items-center justify-center my-auto">
+                            <div class="text-2xl sm:text-3xl">${card.avatar}</div>
+                            <div class="flex items-center space-x-0.5 mt-0.5">${starsHTML}</div>
+                        </div>
+
+                        <div class="bg-black/85 rounded-lg p-1 text-center border border-yellow-500/20">
+                            <div class="font-display font-black text-[11px] sm:text-xs text-white truncate leading-tight">${card.name}</div>
+                            <div class="flex items-center justify-between text-[8px] font-mono text-slate-300 mt-0.5">
+                                <span class="truncate">${card.team.slice(0,3).toUpperCase()}</span>
+                                <span class="px-1 rounded border font-bold ${startBadgeClass}">Tit. ${card.startChance}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Normal Card for Collection & Modal Picker
+            return `
+                <div class="sorare-card-frame ${auraClass} p-3 h-64 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[9px] font-mono font-bold bg-yellow-400/20 text-yellow-300 px-1.5 py-0.5 rounded border border-yellow-400/40">LIMITED</span>
+                        <span class="text-[10px] font-black ${roleColors[card.role]}">${card.role}</span>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center my-auto">
+                        <div class="text-4xl">${card.avatar}</div>
+                        <div class="flex items-center space-x-0.5 mt-1">${starsHTML}</div>
+                        <span class="text-[8px] font-black text-yellow-400/80 tracking-widest uppercase">SORARE SET</span>
+                    </div>
+
+                    <div class="bg-black/85 rounded-xl p-2 border border-yellow-500/25 space-y-1">
+                        <div class="text-center font-display font-black text-xs text-white truncate">${card.name}</div>
+                        <div class="text-[10px] text-slate-400 text-center font-semibold">${card.team}</div>
+
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-[9px] font-mono">
+                            <span class="text-slate-300">${matchup.venueText}</span>
+                            <span class="font-bold text-yellow-400">${matchup.winProb}% Win</span>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-0.5 text-[9px] font-mono">
+                            <span class="text-slate-400">Prob. Titolare:</span>
+                            <span class="px-1 py-0.2 rounded border font-bold ${startBadgeClass}">${card.startChance}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render 3D isometric pitch and Decisive Badges (Goal, Assist, Clean Sheet, Saved Pen)
+        function renderPitch(playerScores = null, liveMatchResults = null, playerBadges = null) {
+            const slots = ['FWD', 'EXTRA', 'DEF', 'GK', 'MID'];
+            let total = 0;
+
+            slots.forEach(slot => {
+                const cardContainer = document.getElementById(`field-card-${slot}`);
+                const scoreContainer = document.getElementById(`field-score-${slot}`);
+                const player = STATE.lineup[slot];
+                const isCap = (STATE.captainSlot === slot);
+
+                if (player) {
+                    cardContainer.innerHTML = renderCardHTML(player, { isPitch: true, isCaptain: isCap });
+
+                    let scoreVal = 0.0;
+                    let isDNP = false;
+
+                    if (playerScores && playerScores[slot] !== undefined) {
+                        scoreVal = playerScores[slot].final;
+                        isDNP = playerScores[slot].isDNP;
+                        total += scoreVal;
+                    }
+
+                    let pillClass = 'score-pill-yellow';
+                    if (isDNP) pillClass = 'score-pill-gray';
+                    else if (scoreVal >= 80) pillClass = 'score-pill-cyan';
+                    else if (scoreVal >= 60) pillClass = 'score-pill-emerald';
+                    else if (scoreVal < 35) pillClass = 'score-pill-red';
+
+                    const matchup = getTeamMatchup(player.team);
+                    let resultText = `${player.team.slice(0,3).toUpperCase()} 0 - 0 ${matchup.oppCode}`;
+                    if (liveMatchResults && liveMatchResults[player.team]) {
+                        resultText = liveMatchResults[player.team];
+                    }
+
+                    // Decisives badges string
+                    let badgesHTML = '';
+                    if (playerBadges && playerBadges[slot]) {
+                        const b = playerBadges[slot];
+                        if (b.goals > 0) badgesHTML += `<span class="px-1 py-0.2 bg-amber-500/20 text-yellow-300 rounded border border-yellow-500/40 text-[9px] font-bold" title="${b.goals} Gol">⚽ ${b.goals > 1 ? b.goals : ''}</span>`;
+                        if (b.assists > 0) badgesHTML += `<span class="px-1 py-0.2 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/40 text-[9px] font-bold" title="${b.assists} Assist">👟 ${b.assists > 1 ? b.assists : ''}</span>`;
+                        if (b.cleanSheet) badgesHTML += `<span class="px-1 py-0.2 bg-cyan-500/20 text-cyan-300 rounded border border-cyan-500/40 text-[9px] font-bold" title="Porta Imbattuta">🧤 CS</span>`;
+                        if (b.penaltySaved > 0) badgesHTML += `<span class="px-1 py-0.2 bg-yellow-500/20 text-yellow-300 rounded border border-yellow-500/40 text-[9px] font-bold" title="Rigore Parato">🛑 PEN</span>`;
+                        if (b.redCard) badgesHTML += `<span class="px-1 py-0.2 bg-rose-500/20 text-rose-300 rounded border border-rose-500/40 text-[9px] font-bold" title="Espulsione">🟥</span>`;
+                    }
+
+                    scoreContainer.innerHTML = `
+                        <div class="flex items-center space-x-1">
+                            <div class="px-3 py-0.5 rounded-full text-xs font-mono font-black ${pillClass}">
+                                ${isDNP ? 'DNP' : scoreVal.toFixed(0)}
+                            </div>
+                            ${badgesHTML}
+                        </div>
+                        <div class="mt-1 px-2 py-0.5 bg-black/80 backdrop-blur-sm rounded-md border border-slate-700 text-[10px] font-mono text-white flex items-center space-x-1 shadow">
+                            <span>⚽</span>
+                            <span>${resultText}</span>
+                        </div>
+                    `;
+                } else {
+                    const slotIcons = { FWD: '⚡ Attaccante', EXTRA: '⭐ Extra (C/D/A)', DEF: '🛡️ Difensore', GK: '🧤 Portiere', MID: '🎯 Centrocampista' };
+                    cardContainer.innerHTML = `
+                        <div class="w-28 sm:w-36 h-36 sm:h-44 rounded-xl border-2 border-dashed border-slate-700/80 hover:border-yellow-400 bg-sorare-card/60 flex flex-col items-center justify-center p-2 text-center transition">
+                            <span class="text-xl mb-1">➕</span>
+                            <span class="text-[11px] font-bold text-slate-300">${slotIcons[slot]}</span>
+                            <span class="text-[9px] text-slate-500 mt-1">Clicca per scegliere</span>
+                        </div>
+                    `;
+                    scoreContainer.innerHTML = '';
+                }
+            });
+
+            document.getElementById('pitch-total-score').innerText = total.toFixed(1);
+        }
+
+        function renderCollection() {
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+
+            let filtered = STATE.collection;
+            if (STATE.currentFilter !== 'ALL') {
+                filtered = STATE.collection.filter(c => c.role === STATE.currentFilter);
+            }
+
+            document.getElementById('nav-card-count').innerText = STATE.collection.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500 text-sm">Nessuna carta per questo filtro.</div>`;
+                return;
+            }
+
+            filtered.forEach(card => {
+                const wrap = document.createElement('div');
+                wrap.innerHTML = renderCardHTML(card);
+                grid.appendChild(wrap);
+            });
+        }
+
+        function renderFixtures() {
+            const grid = document.getElementById('fixtures-grid');
+            grid.innerHTML = '';
+            document.getElementById('fixtures-gw-label').innerText = STATE.gameweek;
+
+            STATE.fixtures.forEach(match => {
+                const homeProb = getTeamMatchup(match.home).winProb;
+                const awayProb = getTeamMatchup(match.away).winProb;
+
+                const card = document.createElement('div');
+                card.className = 'bg-sorare-surface border border-sorare-border rounded-xl p-3 flex flex-col justify-between space-y-2';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="w-5/12 flex items-center space-x-2">
+                            <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-white font-mono text-[11px]">${match.home.slice(0,3).toUpperCase()}</span>
+                            <div class="truncate">
+                                <span class="font-bold text-white truncate block">${match.home}</span>
+                                <span class="text-[9px] text-amber-400 font-mono">CASA 🏠</span>
+                            </div>
+                        </div>
+
+                        <div class="w-2/12 text-center font-mono font-black text-sm text-yellow-400">
+                            ${match.homeScore} - ${match.awayScore}
+                        </div>
+
+                        <div class="w-5/12 flex items-center justify-end space-x-2 text-right">
+                            <div class="truncate">
+                                <span class="font-bold text-white truncate block">${match.away}</span>
+                                <span class="text-[9px] text-cyan-400 font-mono">TRASFERTA ✈️</span>
+                            </div>
+                            <span class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-white font-mono text-[11px]">${match.away.slice(0,3).toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/60 px-2.5 py-1 rounded-lg flex items-center justify-between text-[10px] font-mono border border-slate-800">
+                        <span class="text-amber-300">Vittoria ${match.home.slice(0,3)}: <b>${homeProb}%</b></span>
+                        <span class="text-cyan-300">Vittoria ${match.away.slice(0,3)}: <b>${awayProb}%</b></span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function logTicker(minute, text, colorClass = 'text-slate-300') {
+            const ticker = document.getElementById('ticker-feed');
+            const entry = document.createElement('div');
+            entry.className = `${colorClass} font-mono`;
+            entry.innerHTML = `⏱️ ${minute}' - ${text}`;
+            ticker.prepend(entry);
+        }
+
+        function startGameweekSimulation() {
+            const slots = ['FWD', 'EXTRA', 'DEF', 'GK', 'MID'];
+            const missing = slots.filter(s => STATE.lineup[s] === null);
+            if (missing.length > 0) {
+                alert(`Completa tutti i 5 ruoli sul campo prima di avviare la simulazione!`);
+                return;
+            }
+
+            if (STATE.isSimulating) return;
+            STATE.isSimulating = true;
+            AudioFX.playWhistle();
+
+            document.getElementById('btn-start-sim').disabled = true;
+            document.getElementById('btn-start-sim').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('gw-completion-banner').classList.add('hidden');
+            document.getElementById('gw-status-badge').className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+            document.getElementById('gw-status-badge').innerText = 'SIMULAZIONE LIVE IN CORSO';
+
+            const ticker = document.getElementById('ticker-feed');
+            ticker.innerHTML = `<div class="text-yellow-400 font-bold">⏱️ 00' - Fischio d'inizio contemporaneo su tutti i campi di Serie A!</div>`;
+
+            // Reset fixture scores strictly to 0-0
+            STATE.fixtures.forEach(m => {
+                m.homeScore = 0;
+                m.awayScore = 0;
+            });
+
+            // Initialize player tracker
+            const playerState = {};
+            const liveScores = {};
+            const playerBadges = {};
+
+            slots.forEach(slot => {
+                const player = STATE.lineup[slot];
+                // Realistic DNP: players with >=85% almost never get DNP (<2% unexpected rest)
+                let didPlay = true;
+                if (player.startChance >= 85) {
+                    didPlay = Math.random() > 0.02;
+                } else {
+                    didPlay = (Math.random() * 100) <= player.startChance;
+                }
+
+                playerState[slot] = {
+                    didPlay: didPlay,
+                    minutes: 0,
+                    goals: 0,
+                    assists: 0,
+                    penaltySaved: 0,
+                    goalLineClearance: 0,
+                    cleanSheet: true,
+                    goalsConceded: 0,
+                    redCard: false,
+                    penaltyConceded: 0,
+                    errorLeadingToGoal: 0,
+                    // Continuous AAS attributes
+                    aas: (player.baseAAS || 14) + (Math.random() * (player.varAAS || 6)),
+                    saves: 0,
+                    shotsOnTarget: 0,
+                    tacklesWon: 0,
+                    interceptions: 0
+                };
+
+                playerBadges[slot] = {
+                    goals: 0,
+                    assists: 0,
+                    cleanSheet: false,
+                    penaltySaved: 0,
+                    redCard: false
+                };
+
+                if (!didPlay) {
+                    ticker.innerHTML = `<div class="text-rose-400 font-mono">⚠️ UFFICIALE: ${player.name} (${player.team}) non scende in campo! Risultato: DNP (0 pt).</div>` + ticker.innerHTML;
+                }
+
+                liveScores[slot] = { final: didPlay ? 35.0 : 0.0, isDNP: !didPlay };
+            });
+
+            const getLiveResults = () => {
+                const res = {};
+                STATE.fixtures.forEach(m => {
+                    const str = `${m.home.slice(0,3).toUpperCase()} ${m.homeScore} - ${m.awayScore} ${m.away.slice(0,3).toUpperCase()}`;
+                    res[m.home] = str;
+                    res[m.away] = str;
+                });
+                return res;
+            };
+
+            renderPitch(liveScores, getLiveResults(), playerBadges);
+
+            let minute = 0;
+            const getDelay = () => Math.round(280 / STATE.simSpeed);
+
+            function simulationStep() {
+                if (!STATE.isSimulating) return;
+
+                minute += 3;
+                if (minute > 90) minute = 90;
+
+                document.getElementById('pitch-live-clock').innerText = `MINUTO: ${minute}'`;
+                document.getElementById('sim-progress-indicator').innerText = `In corso (${minute}' / 90')`;
+
+                slots.forEach(s => {
+                    if (playerState[s].didPlay) playerState[s].minutes = minute;
+                });
+
+                // Pick an active player for realistic match action
+                const activeSlots = slots.filter(s => playerState[s].didPlay && !playerState[s].redCard);
+                if (activeSlots.length > 0 && Math.random() < 0.75) {
+                    const pickedSlot = activeSlots[Math.floor(Math.random() * activeSlots.length)];
+                    const p = STATE.lineup[pickedSlot];
+                    const ps = playerState[pickedSlot];
+                    const matchup = getTeamMatchup(p.team);
+                    const fixture = STATE.fixtures.find(m => m.home === p.team || m.away === p.team);
+
+                    // GK Actions
+                    if (p.role === 'GK') {
+                        if (Math.random() < 0.35) {
+                            ps.saves += 1;
+                            ps.aas += 2.0; // +2 pt AAS per parata
+                            logTicker(minute, `🧤 Grande intervento di ${p.name} per ${p.team}! (+2 AAS)`, 'text-emerald-300');
+                        }
+                        if (Math.random() < 0.015 && ps.penaltySaved === 0) {
+                            ps.penaltySaved += 1;
+                            playerBadges[pickedSlot].penaltySaved += 1;
+                            logTicker(minute, `🧤 RIGORE PARATO DA ${p.name}! Azione Decisiva (+1 Livello DS)!`, 'text-yellow-300 font-black');
+                        }
+                    } 
+                    // DEF Actions
+                    else if (p.role === 'DEF') {
+                        if (Math.random() < 0.35) {
+                            ps.tacklesWon += 1;
+                            ps.aas += 1.5;
+                        }
+                        if (Math.random() < 0.25) {
+                            ps.interceptions += 1;
+                            ps.aas += 1.5;
+                        }
+                        if (Math.random() < 0.015 && ps.goalLineClearance === 0) {
+                            ps.goalLineClearance += 1;
+                            logTicker(minute, `🛡️ Salvataggio miracoloso sulla linea di ${p.name}! (+1 Livello DS)`, 'text-yellow-300 font-bold');
+                        }
+                    } 
+                    // MID Actions
+                    else if (p.role === 'MID') {
+                        if (Math.random() < 0.3) {
+                            ps.aas += 3.0; // Grande occasione creata
+                            logTicker(minute, `🎯 Visione illuminante di ${p.name} (${p.team})! Occasione creata (+3 AAS)`, 'text-cyan-300');
+                        }
+                        if (Math.random() < 0.07 && ps.assists < 2) {
+                            ps.assists += 1;
+                            playerBadges[pickedSlot].assists += 1;
+                            // SYNC SCORE: Assist means my team scored!
+                            if (fixture) {
+                                if (fixture.home === p.team) fixture.homeScore += 1;
+                                else fixture.awayScore += 1;
+                            }
+                            logTicker(minute, `👟 ASSIST vincente di ${p.name} (${p.team})! (+1 Livello DS)`, 'text-cyan-300 font-bold');
+                        }
+                    } 
+                    // FWD Actions
+                    else if (p.role === 'FWD') {
+                        if (Math.random() < 0.35) {
+                            ps.shotsOnTarget += 1;
+                            ps.aas += 3.0; // Tiro in porta
+                        }
+                        const goalOdds = (p.stars * 0.035) + (matchup.diff === 'green' ? 0.03 : 0.0);
+                        if (Math.random() < goalOdds && ps.goals < 2) {
+                            ps.goals += 1;
+                            playerBadges[pickedSlot].goals += 1;
+                            // STRICT MATHEMATICAL SCORE SYNC: User player goal updates team score!
+                            if (fixture) {
+                                if (fixture.home === p.team) fixture.homeScore += 1;
+                                else fixture.awayScore += 1;
+                            }
+                            logTicker(minute, `⚽ GOOOOOL di ${p.name}! La sua squadra esulta e il Livello Decisivo sale!`, 'text-emerald-400 font-black');
+                        }
+                        if (Math.random() < 0.1) {
+                            ps.aas -= 2.0; // Palla persa o tiro fuori
+                        }
+                    }
+                }
+
+                // Random goals in other games
+                if (Math.random() < 0.35) {
+                    const randomFixture = STATE.fixtures[Math.floor(Math.random() * STATE.fixtures.length)];
+                    const homeScores = Math.random() > 0.5;
+                    if (homeScores) randomFixture.homeScore += 1;
+                    else randomFixture.awayScore += 1;
+
+                    // Clean sheet logic for user GKs & DEFs
+                    slots.forEach(s => {
+                        const player = STATE.lineup[s];
+                        if (player && (player.role === 'GK' || player.role === 'DEF')) {
+                            const isMyClubConceding = (player.team === randomFixture.home && !homeScores) || (player.team === randomFixture.away && homeScores);
+                            if (isMyClubConceding) {
+                                playerState[s].goalsConceded += 1;
+                                playerState[s].cleanSheet = false;
+                                playerState[s].aas -= 3.0;
+                                playerBadges[s].cleanSheet = false;
+                            }
+                        }
+                    });
+                }
+
+                // Calculate Official Sorare Matrix for each slot
+                slots.forEach(slot => {
+                    const player = STATE.lineup[slot];
+                    const ps = playerState[slot];
+
+                    if (!ps.didPlay) {
+                        liveScores[slot] = { final: 0.0, isDNP: true };
+                        return;
+                    }
+
+                    // Decisive Score Calculation
+                    let decisiveLevel = 0; // Level 0: 35 baseline
+                    decisiveLevel += ps.goals;
+                    decisiveLevel += ps.assists;
+                    decisiveLevel += ps.penaltySaved;
+                    decisiveLevel += ps.goalLineClearance;
+
+                    // Clean Sheet for GK: IS Decisive Action (+1 Level -> 60 base) if 60+ mins
+                    if (player.role === 'GK' && ps.cleanSheet && ps.minutes >= 60) {
+                        decisiveLevel = Math.max(decisiveLevel, 1);
+                        playerBadges[slot].cleanSheet = true;
+                    }
+
+                    if (ps.redCard) decisiveLevel -= 2;
+
+                    let baseDecisive = 35;
+                    if (decisiveLevel <= -2) baseDecisive = 15;
+                    else if (decisiveLevel === -1) baseDecisive = 25;
+                    else if (decisiveLevel === 0) baseDecisive = 35;
+                    else if (decisiveLevel === 1) baseDecisive = 60;
+                    else if (decisiveLevel === 2) baseDecisive = 70;
+                    else if (decisiveLevel === 3) baseDecisive = 80;
+                    else if (decisiveLevel >= 4) baseDecisive = 90;
+
+                    // All-Around Score (AAS)
+                    let currentAAS = ps.aas;
+
+                    // Clean Sheet for DEF: +10 AAS bonus for 60+ min with 0 goals conceded
+                    if (player.role === 'DEF' && ps.cleanSheet && ps.minutes >= 60) {
+                        currentAAS += 10.0;
+                        playerBadges[slot].cleanSheet = true;
+                    }
+
+                    // Flooring rule: if DS >= Level 1 (60pt), AAS cannot decrease score below DS
+                    let calculatedScore = baseDecisive;
+                    if (decisiveLevel >= 1) {
+                        calculatedScore += Math.max(0, currentAAS);
+                    } else {
+                        calculatedScore += currentAAS;
+                    }
+
+                    calculatedScore = Math.max(0, Math.min(100, calculatedScore));
+
+                    // Captain exact x1.5 multiplier (+50%)
+                    if (STATE.captainSlot === slot) {
+                        calculatedScore = calculatedScore * 1.5;
+                    }
+
+                    liveScores[slot] = { final: calculatedScore, isDNP: false };
+                });
+
+                renderPitch(liveScores, getLiveResults(), playerBadges);
+
+                if (minute >= 90) {
+                    finalizeGameweek(liveScores);
+                } else {
+                    setTimeout(simulationStep, getDelay());
+                }
+            }
+
+            setTimeout(simulationStep, getDelay());
+        }
+
+        function finalizeGameweek(liveScores) {
+            AudioFX.playWhistle();
+            STATE.isSimulating = false;
+
+            document.getElementById('gw-status-badge').className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+            document.getElementById('gw-status-badge').innerText = 'GAMEWEEK TERMINATA';
+            document.getElementById('sim-progress-indicator').innerText = 'Fischio Finale (90\')';
+
+            const totalScore = Object.values(liveScores).reduce((acc, curr) => acc + curr.final, 0);
+
+            let prizeCoins = 0;
+            let tierName = null;
+            let mysteryCardTier = null;
+
+            // Rebalanced Tiers:
+            // Tier 4 (250+ pt): +200 Coins
+            // Tier 3 (300+ pt): +400 Coins + 1 Mystery Limited Card (1★-3★)
+            // Tier 2 (360+ pt): +850 Coins + 1 Mystery Top Limited Card (3★-4★)
+            // Tier 1 (420+ pt): +1800 Coins + 1 Guaranteed Star Card (4★-5★)
+            if (totalScore >= 420) {
+                tierName = 'PODIO TIER 1 (ORO)';
+                prizeCoins = 1800;
+                mysteryCardTier = [4, 5];
+                confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 } });
+                AudioFX.playFanfare(true);
+            } else if (totalScore >= 360) {
+                tierName = 'TIER 2 (ARGENTO)';
+                prizeCoins = 850;
+                mysteryCardTier = [3, 4];
+                confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+                AudioFX.playFanfare(false);
+            } else if (totalScore >= 300) {
+                tierName = 'TIER 3 (BRONZO)';
+                prizeCoins = 400;
+                mysteryCardTier = [1, 2, 3];
+            } else if (totalScore >= 250) {
+                tierName = 'TIER 4 (PARTECIPAZIONE)';
+                prizeCoins = 200;
+            }
+
+            STATE.coins += prizeCoins;
+            updateCoinsDisplay();
+            saveGame();
+
+            logTicker(90, `🏁 Fischio finale! Totale SO5: ${totalScore.toFixed(1)} pts! ${tierName ? `🏆 ${tierName}: +${prizeCoins} Coins!` : ''}`, 'text-yellow-400 font-black');
+
+            const banner = document.getElementById('gw-completion-banner');
+            banner.classList.remove('hidden');
+            document.getElementById('completion-title').innerText = `Gameweek #${STATE.gameweek} Conclusa: ${totalScore.toFixed(1)} Punti SO5`;
+            document.getElementById('completion-desc').innerText = tierName ? `Complimenti! Hai raggiunto ${tierName} vincendo +${prizeCoins} Coins!` : `Nessun traguardo raggiunto in questo turno. Clicca Continua per la prossima giornata!`;
+
+            // If mystery card won, reveal modal
+            if (mysteryCardTier) {
+                const targetStar = mysteryCardTier[Math.floor(Math.random() * mysteryCardTier.length)];
+                const rewardCard = generateCard({ stars: targetStar });
+                showMysteryCardReward(rewardCard, tierName);
+            }
+        }
+
+        function showMysteryCardReward(card, tierName) {
+            const modal = document.getElementById('mystery-reward-modal');
+            const container = document.getElementById('mystery-card-container');
+            document.getElementById('mystery-reward-subtitle').innerText = `Traguardo ${tierName} superato! Ecco la tua carta Limited in regalo!`;
+
+            container.innerHTML = renderCardHTML(card);
+            STATE.collection.push(card);
+            saveGame();
+            renderCollection();
+
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+                AudioFX.playFanfare(card.stars >= 4);
+            }, 600);
+        }
+
+        function closeMysteryModal() {
+            AudioFX.playClick();
+            document.getElementById('mystery-reward-modal').classList.add('hidden');
+        }
+
+        function advanceToNextGameweek() {
+            AudioFX.playClick();
+            STATE.gameweek += 1;
+            document.getElementById('gw-number').innerText = STATE.gameweek;
+            generateGameweekFixtures();
+
+            document.getElementById('gw-completion-banner').classList.add('hidden');
+            document.getElementById('gw-status-badge').className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+            document.getElementById('gw-status-badge').innerText = 'SCHIERAMENTO APERTO';
+            document.getElementById('btn-start-sim').disabled = false;
+            document.getElementById('btn-start-sim').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('pitch-live-clock').innerText = "MINUTO: 00'";
+            document.getElementById('sim-progress-indicator').innerText = "Match non iniziato";
+
+            renderPitch();
+            renderFixtures();
+            saveGame();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function rollPlayerCard(minStars = 1) {
+            const roll = Math.random() * 100;
+            let targetStars = 1;
+
+            if (roll < 4) targetStars = 5;
+            else if (roll < 15) targetStars = 4;
+            else if (roll < 35) targetStars = 3;
+            else if (roll < 65) targetStars = 2;
+            else targetStars = 1;
+
+            if (targetStars < minStars) targetStars = minStars;
+
+            let pool = SERIE_A_PLAYERS.filter(p => p.stars === targetStars);
+            if (pool.length === 0) pool = SERIE_A_PLAYERS;
+
+            const baseCard = pool[Math.floor(Math.random() * pool.length)];
+            return {
+                ...baseCard,
+                uid: 'card_' + Math.random().toString(36).substring(2, 9)
+            };
+        }
+
+        function openPack(packType) {
+            AudioFX.playClick();
+            let cost = 500;
+            let numCards = 5;
+
+            if (packType === 'premium') { cost = 1200; numCards = 5; }
+            else if (packType === 'fuoriclasse') { cost = 3000; numCards = 3; }
+
+            if (STATE.coins < cost) {
+                alert(`Club Coins insufficienti! Servono ${cost} coins. Ricarica con lo Sponsor gratuito.`);
+                return;
+            }
+
+            STATE.coins -= cost;
+            updateCoinsDisplay();
+
+            const existingIdSet = new Set(STATE.collection.map(c => c.id));
+            const seenInThisPack = new Set();
+            STATE.packQueue = [];
+
+            for (let i = 0; i < numCards; i++) {
+                let min = 1;
+                if (packType === 'premium' && i === 0) min = 3;
+                if (packType === 'fuoriclasse' && i === 0) min = 4;
+
+                const card = rollPlayerCard(min);
+                // Duplicate check against existing collection OR previous cards in this exact pack!
+                const isDuplicate = existingIdSet.has(card.id) || seenInThisPack.has(card.id);
+                const duplicateValue = DUPLICATE_COIN_VALUES[card.stars] || 80;
+
+                STATE.packQueue.push({
+                    card: card,
+                    isDuplicate: isDuplicate,
+                    duplicateValue: duplicateValue,
+                    revealed: false
+                });
+
+                seenInThisPack.add(card.id);
+            }
+
+            const modal = document.getElementById('pack-opening-modal');
+            const pack = document.getElementById('interactive-pack');
+            const cardsContainer = document.getElementById('pack-cards-container');
+            const closeBtn = document.getElementById('pack-close-btn');
+
+            document.getElementById('pack-modal-title').innerText = "TOCCA IL PACCHETTO PER STRAPPARLO!";
+            document.getElementById('pack-modal-desc').innerText = "Carte Limited Serie A &bull; I doppioni (anche usciti nello stesso pacchetto) vengono convertiti subito in Coins!";
+            document.getElementById('pack-foil-title').innerText = packType.toUpperCase() + " PACK";
+
+            pack.classList.remove('hidden');
+            cardsContainer.classList.add('hidden');
+            cardsContainer.innerHTML = '';
+            closeBtn.classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function ripPack() {
+            AudioFX.playClick();
+            const pack = document.getElementById('interactive-pack');
+            const cardsContainer = document.getElementById('pack-cards-container');
+            const closeBtn = document.getElementById('pack-close-btn');
+
+            confetti({ particleCount: 90, spread: 65, origin: { y: 0.5 }, colors: ['#ffd700', '#f59e0b', '#ffffff'] });
+
+            pack.classList.add('hidden');
+            cardsContainer.classList.remove('hidden');
+            document.getElementById('pack-modal-title').innerText = "CLICCA OGNI CARTA PER IL REVEAL!";
+
+            cardsContainer.innerHTML = '';
+
+            STATE.packQueue.forEach((item, index) => {
+                const card = item.card;
+                const isDup = item.isDuplicate;
+                const dupVal = item.duplicateValue;
+
+                const flip = document.createElement('div');
+                flip.className = 'relative w-36 sm:w-44 h-64 cursor-pointer perspective-1000';
+                flip.innerHTML = `
+                    <div id="flip-card-${index}" class="w-full h-full transform-style-3d transition-transform duration-700 ease-out">
+                        <!-- Back Face -->
+                        <div class="absolute inset-0 backface-hidden sorare-card-frame p-3 flex flex-col items-center justify-between border-2 border-yellow-400 bg-gradient-to-tr from-yellow-700 via-amber-500 to-yellow-300">
+                            <span class="text-[9px] font-mono font-black text-black">LIMITED ONLY</span>
+                            <div class="text-center">
+                                <span class="text-4xl block animate-bounce">⚡</span>
+                                <span class="font-display font-black text-black text-xs block mt-1">SERIE A</span>
+                                <span class="text-[8px] font-bold text-yellow-950">SORARE SET</span>
+                            </div>
+                            <span class="text-[9px] font-black uppercase text-black bg-yellow-300 px-2 py-0.5 rounded-full shadow">Tocca per girare</span>
+                        </div>
+
+                        <!-- Front Face -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180">
+                            ${renderCardHTML(card)}
+                            ${isDup ? `
+                                <div class="absolute inset-x-2 bottom-12 bg-rose-600/95 border border-rose-300 rounded-lg p-1.5 text-center shadow-xl animate-pulse">
+                                    <span class="text-[8px] font-black uppercase tracking-wider text-white block">DOPPIONE CONVERTITO</span>
+                                    <span class="text-[11px] font-mono font-black text-yellow-300">+${dupVal} Coins</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                flip.onclick = () => revealPackCard(index);
+                cardsContainer.appendChild(flip);
+            });
+
+            setTimeout(() => { closeBtn.classList.remove('hidden'); }, 800);
+        }
+
+        function revealPackCard(index) {
+            const item = STATE.packQueue[index];
+            if (!item || item.revealed) return;
+
+            const inner = document.getElementById(`flip-card-${index}`);
+            inner.classList.add('rotate-y-180');
+            item.revealed = true;
+
+            const isHigh = item.card.stars >= 4;
+            AudioFX.playFanfare(isHigh);
+
+            if (item.isDuplicate) {
+                AudioFX.playCoins();
+                STATE.coins += item.duplicateValue;
+                updateCoinsDisplay();
+            } else {
+                STATE.collection.push(item.card);
+            }
+
+            saveGame();
+            renderCollection();
+        }
+
+        function closePackOpeningModal() {
+            AudioFX.playClick();
+            STATE.packQueue.forEach((item, index) => {
+                if (!item.revealed) {
+                    const inner = document.getElementById(`flip-card-${index}`);
+                    if (inner) inner.classList.add('rotate-y-180');
+                    item.revealed = true;
+                    if (item.isDuplicate) {
+                        STATE.coins += item.duplicateValue;
+                    } else {
+                        STATE.collection.push(item.card);
+                    }
+                }
+            });
+
+            updateCoinsDisplay();
+            saveGame();
+            document.getElementById('pack-opening-modal').classList.add('hidden');
+            renderCollection();
+            renderPitch();
+        }
+
+        function recycleAllDuplicates() {
+            const seenIds = new Set();
+            let coinsEarned = 0;
+            let recycledCount = 0;
+            const newCollection = [];
+
+            const activeLineupUids = new Set(Object.values(STATE.lineup).filter(c => c !== null).map(c => c.uid));
+
+            STATE.collection.forEach(card => {
+                if (!seenIds.has(card.id)) {
+                    seenIds.add(card.id);
+                    newCollection.push(card);
+                } else if (activeLineupUids.has(card.uid)) {
+                    newCollection.push(card);
+                } else {
+                    const value = DUPLICATE_COIN_VALUES[card.stars] || 80;
+                    coinsEarned += value;
+                    recycledCount++;
+                }
+            });
+
+            if (recycledCount === 0) {
+                alert("Nessun doppione da vendere nella tua collezione!");
+                return;
+            }
+
+            STATE.collection = newCollection;
+            STATE.coins += coinsEarned;
+            AudioFX.playCoins();
+            updateCoinsDisplay();
+            renderCollection();
+            saveGame();
+
+            alert(`Hai convertito ${recycledCount} doppioni per un totale di +${coinsEarned} Club Coins!`);
+        }
+
+        function claimFreeCoins() {
+            AudioFX.playCoins();
+            STATE.coins += 600;
+            updateCoinsDisplay();
+            saveGame();
+            confetti({ particleCount: 35, spread: 40 });
+        }
+
+        function filterCollection(role) {
+            AudioFX.playClick();
+            STATE.currentFilter = role;
+            document.querySelectorAll('.col-filter-btn').forEach(btn => {
+                btn.className = 'col-filter-btn px-2.5 py-1 rounded text-slate-300 hover:text-white';
+            });
+            event.currentTarget.className = 'col-filter-btn px-2.5 py-1 rounded bg-yellow-500 text-black font-bold';
+            renderCollection();
+        }
+
+        function switchTab(tabName) {
+            AudioFX.playClick();
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.className = 'nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-slate-400 hover:text-white';
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) activeBtn.className = 'nav-btn px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1.5 text-white bg-yellow-500/20 border border-yellow-400/50';
+
+            const activeView = document.getElementById(`view-${tabName}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            if (tabName === 'pitch') renderPitch();
+            if (tabName === 'fixtures') renderFixtures();
+            if (tabName === 'collection') renderCollection();
+        }
+
+        function setSimSpeed(speed) {
+            AudioFX.playClick();
+            document.querySelectorAll('#speed-slow, #speed-normal, #speed-fast').forEach(b => {
+                b.className = 'px-2 py-1 rounded-lg text-slate-300 hover:text-white font-mono';
+            });
+            const activeBtn = document.getElementById(`speed-${speed}`);
+            if (activeBtn) activeBtn.className = 'px-2 py-1 rounded-lg bg-yellow-500/20 text-yellow-300 font-bold border border-yellow-500/40 font-mono';
+
+            if (speed === 'slow') STATE.simSpeed = 0.5;
+            else if (speed === 'fast') STATE.simSpeed = 2;
+            else STATE.simSpeed = 1;
+        }
+
+        function openCardPicker(slot) {
+            if (STATE.isSimulating) return;
+            AudioFX.playClick();
+            STATE.selectingSlot = slot;
+            const modal = document.getElementById('slot-modal');
+            document.getElementById('modal-slot-title').innerText = slot;
+
+            const list = document.getElementById('modal-card-list');
+            list.innerHTML = '';
+
+            const candidates = STATE.collection.filter(card => {
+                if (slot === 'EXTRA') return card.role !== 'GK';
+                return card.role === slot;
+            });
+
+            const assignedUids = Object.entries(STATE.lineup)
+                .filter(([s, c]) => s !== slot && c !== null)
+                .map(([s, c]) => c.uid);
+
+            if (candidates.length === 0) {
+                list.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">Nessun giocatore disponibile per questo ruolo. Sbusta nuovi pacchetti dallo Shop!</div>`;
+            } else {
+                candidates.forEach(card => {
+                    const isAlreadyAssigned = assignedUids.includes(card.uid);
+                    const isCurrent = STATE.lineup[slot] && STATE.lineup[slot].uid === card.uid;
+                    const matchup = getTeamMatchup(card.team);
+
+                    let startClass = 'text-emerald-400';
+                    if (card.startChance <= 25) startClass = 'text-rose-400 font-bold';
+                    else if (card.startChance <= 65) startClass = 'text-amber-400';
+
+                    const row = document.createElement('div');
+                    row.className = `p-2.5 rounded-xl border flex items-center justify-between transition ${
+                        isAlreadyAssigned ? 'opacity-40 bg-slate-900 border-slate-800 pointer-events-none' : 
+                        (isCurrent ? 'bg-yellow-500/15 border-yellow-400' : 'bg-sorare-card hover:bg-slate-800 border-slate-700 cursor-pointer')
+                    }`;
+
+                    row.innerHTML = `
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-2xl">${card.avatar}</span>
+                            <div>
+                                <div class="font-display font-bold text-white text-xs flex items-center space-x-1.5">
+                                    <span>${card.name}</span>
+                                    <span class="text-yellow-400 text-[10px]">${'★'.repeat(card.stars)}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                                    <span>${card.team}</span>
+                                    <span>&bull;</span>
+                                    <span class="text-white">${matchup.venueText} vs ${matchup.oppCode} (${matchup.winProb}% Win)</span>
+                                    <span>&bull;</span>
+                                    <span class="${startClass}">Titolarità: ${card.startChance}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="event.stopPropagation(); setCaptainSlot('${slot}')" class="px-2 py-1 text-[10px] rounded border ${STATE.captainSlot === slot ? 'bg-sorare-neonPink text-white border-pink-400 font-black' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'}">
+                                Cap (C)
+                            </button>
+                            ${isCurrent ? '<span class="text-xs text-yellow-400 font-bold">Schierato</span>' : 
+                              (isAlreadyAssigned ? '<span class="text-[10px] text-slate-500">In uso</span>' : 
+                              '<button class="px-2.5 py-1 bg-yellow-500 text-black text-xs font-bold rounded-lg hover:bg-yellow-400">Scegli</button>')}
+                        </div>
+                    `;
+
+                    if (!isAlreadyAssigned) {
+                        row.onclick = () => {
+                            STATE.lineup[slot] = card;
+                            closeCardPicker();
+                            renderPitch();
+                            saveGame();
+                        };
+                    }
+
+                    list.appendChild(row);
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function setCaptainSlot(slot) {
+            AudioFX.playClick();
+            STATE.captainSlot = slot;
+            renderPitch();
+            saveGame();
+        }
+
+        function closeCardPicker() {
+            document.getElementById('slot-modal').classList.add('hidden');
+            STATE.selectingSlot = null;
+        }
+
+        function clearCurrentSlot() {
+            AudioFX.playClick();
+            if (STATE.selectingSlot) {
+                STATE.lineup[STATE.selectingSlot] = null;
+            }
+            closeCardPicker();
+            renderPitch();
+            saveGame();
+        }
+
+        function autoPickLineup() {
+            if (STATE.isSimulating) return;
+            AudioFX.playClick();
+
+            const usedUids = new Set();
+            const evaluate = (c) => {
+                return (c.stars * 18) + (c.startChance * 0.5) + (getTeamMatchup(c.team).winProb * 0.3);
+            };
+
+            const pick = (role) => {
+                const candidates = STATE.collection
+                    .filter(c => c.role === role && !usedUids.has(c.uid))
+                    .sort((a, b) => evaluate(b) - evaluate(a));
+                if (candidates.length > 0) {
+                    usedUids.add(candidates[0].uid);
+                    return candidates[0];
+                }
+                return null;
+            };
+
+            STATE.lineup.GK = pick('GK');
+            STATE.lineup.DEF = pick('DEF');
+            STATE.lineup.MID = pick('MID');
+            STATE.lineup.FWD = pick('FWD');
+
+            const extraCandidates = STATE.collection
+                .filter(c => c.role !== 'GK' && !usedUids.has(c.uid))
+                .sort((a, b) => evaluate(b) - evaluate(a));
+            STATE.lineup.EXTRA = extraCandidates.length > 0 ? extraCandidates[0] : null;
+
+            renderPitch();
+            saveGame();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            generateGameweekFixtures();
+            updateCoinsDisplay();
+
+            if (!STATE.welcomePackShown || STATE.collection.length === 0) {
+                triggerWelcomePack();
+            } else {
+                renderPitch();
+                renderFixtures();
+                renderCollection();
+            }
+        });
+    </script>
+</body>
+</html>
